@@ -1,0 +1,34 @@
+🧭 Core Feature Pillars
+🎮 1. Basic 3D FPS Framework
+
+    Player controller (WASD + mouse look)
+
+    Weapon firing (raycast-style, no physics initially)
+
+    Simple enemies with dumb AI (later can improve)
+
+    Basic HUD (crosshair, ammo, health)
+
+🧱 2. Procedural Level Generator
+
+    User defines: layout size, style, number of rooms, difficulty
+
+    Engine generates: walls, floors, corridors, enemy spawn points
+
+    Bonus: export to reusable level format (JSON, or binary)
+
+🖼 3. Lightweight 3D Rendering
+
+    Simple 3D model loading (e.g., OBJ or hardcoded meshes)
+
+    Basic lighting (flat or Gouraud shading)
+
+    No shadows or PBR yet — keep it fast and readable
+
+    Use your own math (or GLM) and camera system
+
+💻 4. Minimal Tooling
+
+    CLI for generating levels from config files or command-line args
+
+    Later: ImGui-based level preview/editor
