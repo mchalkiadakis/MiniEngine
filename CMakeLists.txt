@@ -11,21 +11,26 @@ include_directories(
     external/glad/include
     external/glfw/include
     src
+    src/Core
+    src/Rendering   
+    src/Gameplay
+    src/World
+    src/Engine
 )
 
-# Gather sources
+# Gather source files
 file(GLOB_RECURSE SOURCES
-    "src/Core/*.cpp"
-    "src/Rendering/*.cpp"
-    "src/Gameplay/*.cpp"
-    "src/World/*.cpp"
-    "src/Engine/*.cpp"
-    "src/*.cpp"  # In case main.cpp is still directly in src/
-    "external/glad/src/glad.c"
+    src/Core/*.cpp
+    src/Rendering/*.cpp
+    src/Gameplay/*.cpp
+    src/World/*.cpp
+    src/Engine/*.cpp
+    src/*.cpp
+    external/glad/src/glad.c
 )
 
 # Executable
-add_executable(MiniEngine ${SOURCES} "src/Rendering/Renderer.cpp" "src/Rendering/Renderer.h")
+add_executable(MiniEngine ${SOURCES})
 
-# Link libraries: GLAD + GLFW + OpenGL (Windows)
+# Link libraries
 target_link_libraries(MiniEngine glfw opengl32)
