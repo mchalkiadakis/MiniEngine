@@ -1,7 +1,5 @@
-﻿#include <glad/glad.h>       // Always include GLAD before GLFW
-#include <GLFW/glfw3.h>
-#include <iostream>
-#include "Shader.h"
+﻿
+#include "MiniEngine.h"
 
 int main() {
     // Initialize GLFW
@@ -33,6 +31,7 @@ int main() {
 
     // Set the viewport
     glViewport(0, 0, 800, 600);
+    
     const char* vertexShaderSource = R"(
 #version 330 core
 layout(location = 0) in vec3 aPos;
@@ -47,24 +46,36 @@ void main()
 #version 330 core
 out vec4 FragColor;
 void main() {
-    FragColor = vec4(1.0, 0.5, 0.2, 1.0); // Orange
+    FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green
 }
 )";
 
     Shader shader(FromSource, vertexShaderSource, fragmentShaderSource);
+
+
+    float triangle[] = {
+     0.0f,  0.5f, 0.0f,
+    -0.5f, -0.5f, 0.0f,
+     0.5f, -0.4f, 0.0f
+    };
+
+    unsigned int triangleVAO = Renderer::CreateMesh(triangle, 9);
+    
     // Main loop
     while (!glfwWindowShouldClose(window)) {
         // Set background color and clear the screen
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+
+        Renderer::Draw(triangleVAO, (size_t)3, shader);
+
+
+
+        // Swap buffers and poll. All drawing needs to be done above
         glfwSwapBuffers(window);
         glfwPollEvents();
-        
-
-        
-        
-        shader.Use();
+ 
     }
 
     // Cleanup

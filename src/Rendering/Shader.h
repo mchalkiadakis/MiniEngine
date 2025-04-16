@@ -11,7 +11,7 @@ public:
     ~Shader();
 
     void Use() const;
-
+    
     // Uniform setters (we’ll expand as needed)
     void SetUniform1i(const std::string& name, int value);
     void SetUniform1f(const std::string& name, float value);
