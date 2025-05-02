@@ -2,6 +2,8 @@
 // or project specific include files.
 
 #pragma once
+#define GLM_ENABLE_EXPERIMENTAL
+#define STB_IMAGE_IMPLEMENTATION
 #include <glad/glad.h>       // Always include GLAD before GLFW
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -12,9 +14,9 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 #include "Mesh.h"
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "Texture.h"
 #include "Material.h"
-
+#include "Camera/Camera.h"
+#include <gtx/string_cast.hpp>
 // TODO: Reference additional headers your program requires here.

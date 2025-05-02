@@ -1,4 +1,4 @@
-#include "Shader.h"
+﻿#include "Shader.h"
 #include <glad/glad.h>
 #include <fstream>
 #include <sstream>
@@ -23,7 +23,8 @@ int Shader::GetUniformLocation(const std::string& name) {
 }
 
 void Shader::SetUniformMat4(const std::string& name, const float* matrix) {
-    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, matrix);
+    glUseProgram(m_ID);  // REQUIRED!
+    glUniformMatrix4fv(glGetUniformLocation(m_ID, name.c_str()), 1, GL_FALSE, matrix);
 }
 
 

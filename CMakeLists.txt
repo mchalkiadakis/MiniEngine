@@ -34,7 +34,7 @@ file(GLOB_RECURSE SOURCES
 )
 include_directories(external/stb)
 # Create executable
-add_executable(MiniEngine ${SOURCES} "src/Rendering/Mesh.h" "src/Rendering/Mesh.cpp" "src/Rendering/Texture.cpp" "src/Rendering/Texture.h" "src/Rendering/Material.h" "src/Rendering/Material.cpp")
+add_executable(MiniEngine ${SOURCES} "src/Rendering/Mesh.h" "src/Rendering/Mesh.cpp" "src/Rendering/Texture.cpp" "src/Rendering/Texture.h" "src/Rendering/Material.h" "src/Rendering/Material.cpp" "src/Camera/Camera.cpp" "src/Camera/Camera.h")
 
 # Link libraries
 target_link_libraries(MiniEngine glfw opengl32)
