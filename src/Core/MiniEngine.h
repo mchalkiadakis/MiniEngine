@@ -8,5 +8,13 @@
 #include "Shader.h"
 #include "Renderer.h"
 #include <iostream>
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
+#include "Mesh.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#include "Texture.h"
+#include "Material.h"
 
 // TODO: Reference additional headers your program requires here.

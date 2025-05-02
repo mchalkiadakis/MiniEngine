@@ -32,50 +32,44 @@ int main() {
     // Set the viewport
     glViewport(0, 0, 800, 600);
     
-    const char* vertexShaderSource = R"(
-#version 330 core
-layout(location = 0) in vec3 aPos;
 
-void main()
-{
-    gl_Position = vec4(aPos, 1.0);
-}
-)";
-
-    const char* fragmentShaderSource = R"(
-#version 330 core
-out vec4 FragColor;
-void main() {
-    FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green
-}
-)";
-
-    Shader shader(FromSource, vertexShaderSource, fragmentShaderSource);
-
-
-    float triangle[] = {
-     0.0f,  0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.4f, 0.0f
+    //LOADING SHADERS
+    
+    //Shader shader("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag");
+    //Texture sandTexture("Assets/Textures/sand.jpg");
+    auto shader = std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag");
+    auto sandTexture = std::make_shared<Texture>("Assets/Textures/sand.jpg");
+    
+    std::vector<float> vertices = {
+         0.0f,  0.5f, 0.0f,  0.5f, 1.0f, // top
+        -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, // bottom left
+         0.5f, -0.5f, 0.0f,  1.0f, 0.0f  // bottom right
     };
 
-    unsigned int triangleVAO = Renderer::CreateMesh(triangle, 9);
+    std::vector<unsigned int> indices = { 0, 1, 2 };
+
     
+   
+    Material material(shader, sandTexture);
+    Mesh triangleMesh(vertices, indices, sizeof(float) * 5);
+    
+    glm::mat4 model = glm::mat4(1.0f);
+
     // Main loop
     while (!glfwWindowShouldClose(window)) {
-        // Set background color and clear the screen
         glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
 
-        Renderer::Draw(triangleVAO, (size_t)3, shader);
+        material.Bind();
+        shader->SetUniformMat4("u_Model", glm::value_ptr(model));
+        triangleMesh.Draw();
+
+        
 
 
-
-        // Swap buffers and poll. All drawing needs to be done above
         glfwSwapBuffers(window);
         glfwPollEvents();
- 
     }
 
     // Cleanup

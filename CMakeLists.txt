@@ -3,13 +3,14 @@ project(MiniEngine)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# GLFW (CMake-compatible)
+# Add GLFW (must be CMake-compatible version)
 add_subdirectory(external/glfw)
 
 # Include paths
 include_directories(
     external/glad/include
     external/glfw/include
+    external/glm           # For glm/glm.hpp (your structure)
     src
     src/Core
     src/Rendering   
@@ -17,6 +18,9 @@ include_directories(
     src/World
     src/Engine
 )
+
+# Copy Assets/ to build directory (shaders, textures, etc.)
+file(COPY Assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Gather source files
 file(GLOB_RECURSE SOURCES
@@ -28,9 +32,9 @@ file(GLOB_RECURSE SOURCES
     src/*.cpp
     external/glad/src/glad.c
 )
-
-# Executable
-add_executable(MiniEngine ${SOURCES})
+include_directories(external/stb)
+# Create executable
+add_executable(MiniEngine ${SOURCES} "src/Rendering/Mesh.h" "src/Rendering/Mesh.cpp" "src/Rendering/Texture.cpp" "src/Rendering/Texture.h" "src/Rendering/Material.h" "src/Rendering/Material.cpp")
 
 # Link libraries
 target_link_libraries(MiniEngine glfw opengl32)

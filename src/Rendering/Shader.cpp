@@ -18,7 +18,13 @@ Shader::~Shader() {
     glDeleteProgram(m_ID);
 }
 
+int Shader::GetUniformLocation(const std::string& name) {
+    return glGetUniformLocation(m_ID, name.c_str());
+}
 
+void Shader::SetUniformMat4(const std::string& name, const float* matrix) {
+    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, matrix);
+}
 
 
 
@@ -28,12 +34,13 @@ void Shader::Use() const {
 // Load shader source from file
 std::string Shader::LoadFile(const std::string& path) {
     std::ifstream file(path);
+    if (!file) {
+        std::cerr << "Failed to open shader file: " << path << std::endl;
+        return "";
+    }
+
     std::stringstream ss;
-    std::string line;
-
-    while (std::getline(file, line))
-        ss << line << '\n';
-
+    ss << file.rdbuf();  // Read full file into stream
     return ss.str();
 }
 // Compile individual shader
@@ -52,7 +59,7 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
         glGetShaderInfoLog(shader, 512, nullptr, infoLog);
         std::cerr << "Shader compilation failed:\n" << infoLog << std::endl;
     }
-
+    std::cout << "Compiling shader source:\n" << source << "\n";
     return shader;
 }
 // Link shaders into a program
