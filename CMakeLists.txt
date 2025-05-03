@@ -24,6 +24,7 @@ include_directories(
 # Copy Assets/ to build directory (shaders, textures, etc.)
 file(COPY Assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
+
 # Gather source files
 file(GLOB_RECURSE SOURCES
     src/Core/*.cpp
@@ -37,7 +38,7 @@ file(GLOB_RECURSE SOURCES
 )
 
 # Create executable
-add_executable(MiniEngine ${SOURCES})
+add_executable(MiniEngine ${SOURCES} "src/World/Scene.h" "src/World/Entity.cpp" "src/World/Entity.h" "src/World/Scene.cpp")
 
 # Link libraries
 target_link_libraries(MiniEngine glfw opengl32)

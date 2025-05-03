@@ -1,6 +1,7 @@
-
 #include "Core/MiniEngineApp.h"
-
+#include "World/Scene.h"
+#include "World/Entity.h"
+#include "MiniEngine.h"
 
 bool MiniEngineApp::Init() {
     if (!glfwInit()) {
@@ -30,29 +31,78 @@ bool MiniEngineApp::Init() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    // Load assets
-    m_Shader = std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag");
-    m_Texture = std::make_shared<Texture>("Assets/Textures/sand.jpg");
-    m_Material = std::make_unique<Material>(m_Shader, m_Texture);
-
-    std::vector<float> vertices = {
-        0.0f,  0.5f,  0.0f,   0.5f, 1.0f,
-       -0.5f, -0.5f,  0.5f,   0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,   1.0f, 0.0f,
-        0.5f, -0.5f, -0.5f,   1.0f, 1.0f,
-       -0.5f, -0.5f, -0.5f,   0.0f, 1.0f
-    };
-
-    std::vector<unsigned int> indices = {
-        0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1,
-        1, 4, 3, 1, 3, 2
-    };
-
-    m_Mesh = std::make_unique<Mesh>(vertices, indices, sizeof(float) * 5);
-
-    m_Camera = std::make_unique<Camera>(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
+    m_Camera = std::make_shared<Camera>(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
     m_Camera->SetPosition(glm::vec3(0.0f, 0.0f, 5.0f));
     m_Camera->SetTarget(glm::vec3(0.0f, 0.0f, -1.0f));
+
+    m_Scene = std::make_unique<Scene>();
+
+
+    //CREATING PYRAMID ENTITY
+    auto& entity = m_Scene->CreateEntity("Pyramid");
+    entity.SetMesh(std::make_unique<Mesh>(
+        std::vector<float>{
+        0.0f, 0.5f, 0.0f, 0.5f, 1.0f,
+            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+            0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f
+    },
+        std::vector<unsigned int>{
+        0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1,
+            1, 4, 3, 1, 3, 2
+    },
+        sizeof(float) * 5
+    ));
+    entity.SetMaterial(std::make_unique<Material>(
+        std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag"),
+        std::make_shared<Texture>("Assets/Textures/sand.jpg")
+    ));
+    entity.EnableRotation(true);
+
+    //CRTEATING CUBE 
+    auto& goldCube = m_Scene->CreateEntity("Cube");
+    // Cube vertex data (positions + UVs)
+    std::vector<float> cubeVertices = {
+        // Front face
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        // Back face
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    };
+
+    // Index data
+    std::vector<unsigned int> cubeIndices = {
+        // Front
+        0, 1, 2, 2, 3, 0,
+        // Right
+        1, 5, 6, 6, 2, 1,
+        // Back
+        5, 4, 7, 7, 6, 5,
+        // Left
+        4, 0, 3, 3, 7, 4,
+        // Top
+        3, 2, 6, 6, 7, 3,
+        // Bottom
+        4, 5, 1, 1, 0, 4
+    };
+
+    goldCube.SetMesh(std::make_unique<Mesh>(cubeVertices, cubeIndices, sizeof(float) * 5));
+    goldCube.SetMaterial(std::make_unique<Material>(
+        std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag"),
+        std::make_shared<Texture>("Assets/Textures/gold.jpg")
+    ));
+    goldCube.SetTransform(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.5f, 0.0f)));
+    goldCube.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));  // above the pyramid
+    goldCube.EnableRotation(true);                    // no spin
+   
+
+
 
     return true;
 }
@@ -65,7 +115,8 @@ void MiniEngineApp::Run() {
         lastFrame = currentFrame;
 
         PollInput(deltaTime);
-        Render(currentFrame);
+        Update(deltaTime);
+        Render();
 
         glfwSwapBuffers(m_Window);
         glfwPollEvents();
@@ -86,17 +137,13 @@ void MiniEngineApp::PollInput(float deltaTime) {
     m_Camera->ProcessKeyboard(deltaTime, w, s, a, d, q, e);
 }
 
-void MiniEngineApp::Render(float time) {
+void MiniEngineApp::Update(float deltaTime) {
+    m_Scene->Update(deltaTime);
+}
+
+void MiniEngineApp::Render() {
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::mat4 model = glm::rotate(glm::mat4(1.0f), time, glm::vec3(0.0f, 1.0f, 0.0f));
-
-    m_Material->Bind();
-    m_Shader->Use();
-    m_Shader->SetUniformMat4("u_Model", glm::value_ptr(model));
-    m_Shader->SetUniformMat4("u_View", glm::value_ptr(m_Camera->GetViewMatrix()));
-    m_Shader->SetUniformMat4("u_Projection", glm::value_ptr(m_Camera->GetProjectionMatrix()));
-
-    m_Mesh->Draw();
+    m_Scene->Render(*m_Camera);
 }

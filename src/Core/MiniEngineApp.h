@@ -1,23 +1,20 @@
 #pragma once
 
 #include "MiniEngine.h"
-
-
+#include "World/Scene.h"
+#include "Camera/Camera.h"
 class MiniEngineApp {
 public:
     bool Init();
     void Run();
-    void Shutdown();
 
 private:
     void PollInput(float deltaTime);
-    void Render(float time);
+    void Update(float deltaTime);
+    void Render();
 
     GLFWwindow* m_Window = nullptr;
 
-    std::shared_ptr<Shader> m_Shader;
-    std::shared_ptr<Texture> m_Texture;
-    std::unique_ptr<Material> m_Material;
-    std::unique_ptr<Mesh> m_Mesh;
-    std::unique_ptr<Camera> m_Camera;
+    std::shared_ptr<Camera> m_Camera;
+    std::unique_ptr<Scene> m_Scene;
 };

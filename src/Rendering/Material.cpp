@@ -10,3 +10,4 @@ void Material::Bind() const {
     m_Texture->Bind(0); // Default slot 0
     //could also call m_Shader->SetUniform("u_Texture", 0) if needed
 }
+

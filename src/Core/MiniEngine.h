@@ -6,6 +6,7 @@
 
 #include <glad/glad.h>       // Always include GLAD before GLFW
 #include <GLFW/glfw3.h>
+
 #include <iostream>
 #include "Shader.h"
 #include "Renderer.h"
@@ -20,4 +21,7 @@
 #include "Camera/Camera.h"
 #include <gtx/string_cast.hpp>
 #include "Core/MiniEngineApp.h"
+#include "World/Scene.h"
+#include "World/Entity.h"
+#include "Camera/Camera.h"
 // TODO: Reference additional headers your program requires here.
