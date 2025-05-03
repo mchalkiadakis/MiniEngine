@@ -4,7 +4,7 @@
 #include <gtc/type_ptr.hpp>
 class Camera {
 public:
-    Camera(float fov, float aspectRatio, float nearClip, float farClip); // ✅ Perspective
+    Camera(float fov, float aspectRatio, float nearClip, float farClip); // Perspective
 
     glm::mat4 GetViewMatrix() const;
     glm::mat4 GetProjectionMatrix() const;

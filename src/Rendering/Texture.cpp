@@ -2,6 +2,8 @@
 #include <glad/glad.h>
 #include <stb_image.h>
 #include <iostream>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 Texture::Texture(const std::string& filepath) {
     stbi_set_flip_vertically_on_load(1); // Optional: OpenGL expects flipped Y

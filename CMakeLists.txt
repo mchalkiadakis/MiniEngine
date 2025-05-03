@@ -10,13 +10,15 @@ add_subdirectory(external/glfw)
 include_directories(
     external/glad/include
     external/glfw/include
-    external/glm           # For glm/glm.hpp (your structure)
+    external/glm           # For glm/glm.hpp
+    external/stb           # For stb_image.h if used
     src
     src/Core
     src/Rendering   
     src/Gameplay
     src/World
     src/Engine
+    src/Camera
 )
 
 # Copy Assets/ to build directory (shaders, textures, etc.)
@@ -29,12 +31,13 @@ file(GLOB_RECURSE SOURCES
     src/Gameplay/*.cpp
     src/World/*.cpp
     src/Engine/*.cpp
+    src/Camera/*.cpp
     src/*.cpp
     external/glad/src/glad.c
 )
-include_directories(external/stb)
+
 # Create executable
-add_executable(MiniEngine ${SOURCES} "src/Rendering/Mesh.h" "src/Rendering/Mesh.cpp" "src/Rendering/Texture.cpp" "src/Rendering/Texture.h" "src/Rendering/Material.h" "src/Rendering/Material.cpp" "src/Camera/Camera.cpp" "src/Camera/Camera.h")
+add_executable(MiniEngine ${SOURCES})
 
 # Link libraries
 target_link_libraries(MiniEngine glfw opengl32)
