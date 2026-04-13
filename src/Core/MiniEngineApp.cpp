@@ -1,6 +1,4 @@
-#include "Core/MiniEngineApp.h"
-#include "World/Scene.h"
-#include "World/Entity.h"
+
 #include "MiniEngine.h"
 
 bool MiniEngineApp::Init() {
@@ -39,7 +37,7 @@ bool MiniEngineApp::Init() {
 
 
     //CREATING PYRAMID ENTITY
-    auto& entity = m_Scene->CreateEntity("Pyramid");
+    Entity& entity = m_Scene->CreateEntity("Pyramid");
     entity.SetMesh(std::make_unique<Mesh>(
         std::vector<float>{
         0.0f, 0.5f, 0.0f, 0.5f, 1.0f,
@@ -97,11 +95,10 @@ bool MiniEngineApp::Init() {
         std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag"),
         std::make_shared<Texture>("Assets/Textures/gold.jpg")
     ));
-    goldCube.SetTransform(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.5f, 0.0f)));
-    goldCube.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));  // above the pyramid
-    goldCube.EnableRotation(true);                    // no spin
    
-
+    goldCube.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));  // above the pyramid
+    goldCube.EnableRotation(true);                   
+   
 
 
     return true;

@@ -9,7 +9,7 @@ CMakeCache.txt
 *.vcxproj*
 *.user
 .vs/
-
+goals.txt
 # Binaries
 *.exe
 *.obj

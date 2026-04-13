@@ -9,8 +9,6 @@
 
 #include <iostream>
 #include "Shader.h"
-#include "Renderer.h"
-#include <iostream>
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
@@ -23,5 +21,3 @@
 #include "Core/MiniEngineApp.h"
 #include "World/Scene.h"
 #include "World/Entity.h"
-#include "Camera/Camera.h"
-// TODO: Reference additional headers your program requires here.

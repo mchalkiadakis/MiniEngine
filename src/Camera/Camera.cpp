@@ -29,20 +29,20 @@ void Camera::SetPosition(const glm::vec3& position) {
 }
 
 void Camera::SetTarget(const glm::vec3& target) {
-    m_Target = target;
-    m_Front = glm::normalize(target - m_Position);
-    m_Right = glm::normalize(glm::cross(m_Front, m_Up));
+     m_Target = target;
+     m_Front = glm::normalize(target - m_Position);
+     m_Right = glm::normalize(glm::cross(m_Front, m_Up));
 }
 
 void Camera::ProcessKeyboard(float deltaTime, bool forward, bool backward, bool left, bool right, bool down, bool up) {
     float velocity = m_Speed * deltaTime;
 
-    if (forward)  m_Position += glm::vec3(0.0f, -1.0f, 0.0f) * velocity;
-    if (backward) m_Position += glm::vec3(0.0f, 1.0f, 0.0f) * velocity;
-    if (left)     m_Position += glm::vec3(-1.0f, 0.0f, 0.0f) * velocity;
-    if (right)    m_Position += glm::vec3(1.0f, 0.0f, 0.0f) * velocity;
-    if (down)     m_Position += glm::vec3(0.0f, 0.0f, -1.0f) * velocity;
-    if (up)       m_Position += glm::vec3(0.0f, 0.0f, 1.0f) * velocity;
+    if (forward)  m_Position += m_Front * velocity;
+    if (backward) m_Position -= m_Front * velocity;
+    if (left)     m_Position -= m_Right * velocity;
+    if (right)    m_Position += m_Right * velocity;
+    if (up)       m_Position += m_Up * velocity;
+    if (down)     m_Position -= m_Up * velocity;
 
     m_Target = m_Position + m_Front;
 }

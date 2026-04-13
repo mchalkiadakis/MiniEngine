@@ -28,7 +28,6 @@ file(COPY Assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 # Gather source files
 file(GLOB_RECURSE SOURCES
     src/Core/*.cpp
-    src/Rendering/*.cpp
     src/Gameplay/*.cpp
     src/World/*.cpp
     src/Engine/*.cpp
