@@ -1,4 +1,3 @@
-
 #include "MiniEngine.h"
 
 bool MiniEngineApp::Init() {
@@ -33,72 +32,99 @@ bool MiniEngineApp::Init() {
     m_Camera->SetPosition(glm::vec3(0.0f, 0.0f, 5.0f));
     m_Camera->SetTarget(glm::vec3(0.0f, 0.0f, -1.0f));
 
+    s_Instance = this;
+    glfwSetCursorPosCallback(m_Window, MouseCallback);
+    glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     m_Scene = std::make_unique<Scene>();
 
+    // CREATING PYRAMID ENTITY
+    std::vector<Vertex> pyramidVertices = {
+        { {  0.0f,  0.5f,  0.0f }, {  0.0f,  1.0f,  0.0f }, { 0.5f, 1.0f } },
+        { { -0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 0.0f } },
+        { {  0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 0.0f } },
+        { {  0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 1.0f, 1.0f } },
+        { { -0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 0.0f, 1.0f } },
+    };
 
-    //CREATING PYRAMID ENTITY
+    std::vector<unsigned int> pyramidIndices = {
+        0, 1, 2,  0, 2, 3,  0, 3, 4,  0, 4, 1,
+        1, 4, 3,  1, 3, 2
+    };
+
     Entity& entity = m_Scene->CreateEntity("Pyramid");
-    entity.SetMesh(std::make_unique<Mesh>(
-        std::vector<float>{
-        0.0f, 0.5f, 0.0f, 0.5f, 1.0f,
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
-            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-            0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, 0.0f, 1.0f
-    },
-        std::vector<unsigned int>{
-        0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 1,
-            1, 4, 3, 1, 3, 2
-    },
-        sizeof(float) * 5
-    ));
+    entity.SetMesh(std::make_unique<Mesh>(pyramidVertices, pyramidIndices));
     entity.SetMaterial(std::make_unique<Material>(
         std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag"),
         std::make_shared<Texture>("Assets/Textures/sand.jpg")
     ));
     entity.EnableRotation(true);
 
-    //CRTEATING CUBE 
-    auto& goldCube = m_Scene->CreateEntity("Cube");
-    // Cube vertex data (positions + UVs)
-    std::vector<float> cubeVertices = {
+    // CREATING CUBE
+    std::vector<Vertex> cubeVertices = {
         // Front face
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        { { -0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 0.0f } },
+        { {  0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 0.0f } },
+        { {  0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 1.0f } },
+        { { -0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 1.0f } },
         // Back face
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        { { -0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 0.0f, 0.0f } },
+        { {  0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 1.0f, 0.0f } },
+        { {  0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 1.0f, 1.0f } },
+        { { -0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 0.0f, 1.0f } },
+        // Right face
+        { {  0.5f, -0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f }, { 0.0f, 0.0f } },
+        { {  0.5f, -0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f }, { 1.0f, 0.0f } },
+        { {  0.5f,  0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f }, { 1.0f, 1.0f } },
+        { {  0.5f,  0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f }, { 0.0f, 1.0f } },
+        // Left face
+        { { -0.5f, -0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f }, { 0.0f, 0.0f } },
+        { { -0.5f, -0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f }, { 1.0f, 0.0f } },
+        { { -0.5f,  0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f }, { 1.0f, 1.0f } },
+        { { -0.5f,  0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f }, { 0.0f, 1.0f } },
+        // Top face
+        { { -0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f }, { 0.0f, 0.0f } },
+        { {  0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f }, { 1.0f, 0.0f } },
+        { {  0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f }, { 1.0f, 1.0f } },
+        { { -0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f }, { 0.0f, 1.0f } },
+        // Bottom face
+        { { -0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f }, { 0.0f, 0.0f } },
+        { {  0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f }, { 1.0f, 0.0f } },
+        { {  0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f }, { 1.0f, 1.0f } },
+        { { -0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f }, { 0.0f, 1.0f } },
     };
 
-    // Index data
     std::vector<unsigned int> cubeIndices = {
-        // Front
-        0, 1, 2, 2, 3, 0,
-        // Right
-        1, 5, 6, 6, 2, 1,
-        // Back
-        5, 4, 7, 7, 6, 5,
-        // Left
-        4, 0, 3, 3, 7, 4,
-        // Top
-        3, 2, 6, 6, 7, 3,
-        // Bottom
-        4, 5, 1, 1, 0, 4
+         0,  1,  2,   2,  3,  0,  // front
+         4,  7,  6,   6,  5,  4,  // back
+         8,  9, 10,  10, 11,  8,  // right
+        12, 13, 14,  14, 15, 12,  // left
+        16, 17, 18,  18, 19, 16,  // top
+        20, 21, 22,  22, 23, 20,  // bottom
     };
 
-    goldCube.SetMesh(std::make_unique<Mesh>(cubeVertices, cubeIndices, sizeof(float) * 5));
+
+    auto shader = std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag");
+    auto model = ModelLoader::Load("Assets/Models/backpack/backpack.obj", shader);
+    if (model) {
+        Entity& e = m_Scene->CreateEntity("Backpack");
+        e.SetModel(std::move(model));
+        e.SetPosition(glm::vec3(3.0f, 0.0f, 0.0f)); // offset so it doesn't overlap the pyramid/cube
+    }
+    else {
+        std::cerr << "Failed to load backpack model\n";
+    }
+
+
+
+    auto& goldCube = m_Scene->CreateEntity("Cube");
+    goldCube.SetMesh(std::make_unique<Mesh>(cubeVertices, cubeIndices));
     goldCube.SetMaterial(std::make_unique<Material>(
         std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag"),
         std::make_shared<Texture>("Assets/Textures/gold.jpg")
     ));
-   
-    goldCube.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));  // above the pyramid
-    goldCube.EnableRotation(true);                   
-   
+    goldCube.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));
+    goldCube.EnableRotation(true);
 
 
     return true;
@@ -143,4 +169,23 @@ void MiniEngineApp::Render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     m_Scene->Render(*m_Camera);
+}
+
+MiniEngineApp* MiniEngineApp::s_Instance = nullptr;
+
+void MiniEngineApp::MouseCallback(GLFWwindow*, double xpos, double ypos) {
+    if (s_Instance->m_FirstMouse) {
+        s_Instance->m_LastMouseX = static_cast<float>(xpos);
+        s_Instance->m_LastMouseY = static_cast<float>(ypos);
+        s_Instance->m_FirstMouse = false;
+        return;
+    }
+
+    float xOffset = static_cast<float>(xpos) - s_Instance->m_LastMouseX;
+    float yOffset = -(static_cast<float>(ypos) - s_Instance->m_LastMouseY);
+
+    s_Instance->m_LastMouseX = static_cast<float>(xpos);
+    s_Instance->m_LastMouseY = static_cast<float>(ypos);
+
+    s_Instance->m_Camera->ProcessMouseMovement(xOffset, yOffset);
 }

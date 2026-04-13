@@ -1,4 +1,5 @@
 #include "Entity.h"
+#include "Rendering/Model.h"
 
 Entity::Entity(const std::string& name) : m_Name(name) {}
 
@@ -23,12 +24,20 @@ void Entity::Update(float deltaTime) {
     }
 }
 
+void Entity::SetModel(std::unique_ptr<Model> model) {
+    m_Model = std::move(model);
+}
+
 void Entity::Render(const Camera& camera) {
+    if (m_Model) {
+        m_Model->Draw(camera, m_ModelMatrix);
+        return;
+    }
+
     if (!m_Material || !m_Mesh)
         return;
 
     m_Material->Bind();
-    m_Material->GetShader()->Use();
     m_Material->GetShader()->SetUniformMat4("u_Model", glm::value_ptr(m_ModelMatrix));
     m_Material->GetShader()->SetUniformMat4("u_View", glm::value_ptr(camera.GetViewMatrix()));
     m_Material->GetShader()->SetUniformMat4("u_Projection", glm::value_ptr(camera.GetProjectionMatrix()));

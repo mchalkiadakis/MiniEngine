@@ -1,17 +1,20 @@
-﻿#pragma once
+﻿// Camera.h
+#pragma once
 #include <glm.hpp>
-#include "Shader.h"
 #include <gtc/type_ptr.hpp>
+
 class Camera {
 public:
-    Camera(float fov, float aspectRatio, float nearClip, float farClip); // Perspective
+    Camera(float fov, float aspectRatio, float nearClip, float farClip);
 
     glm::mat4 GetViewMatrix() const;
     glm::mat4 GetProjectionMatrix() const;
 
     void ProcessKeyboard(float deltaTime, bool forward, bool backward, bool left, bool right, bool down, bool up);
+    void ProcessMouseMovement(float xOffset, float yOffset, bool constrainPitch = true);
     void SetPosition(const glm::vec3& position);
     void SetTarget(const glm::vec3& target);
+
     glm::vec3 GetPosition() const { return m_Position; }
 
 private:
@@ -27,4 +30,7 @@ private:
     float m_Far;
 
     float m_Speed = 2.5f;
+    float m_MouseSensitivity = 0.1f;
+    float m_Yaw = -90.0f;
+    float m_Pitch = 0.0f;
 };

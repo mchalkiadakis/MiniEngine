@@ -1,23 +1,22 @@
-﻿// MiniEngine.h : Include file for standard system include files,
-// or project specific include files.
-
-#pragma once
+﻿#pragma once
 #define GLM_ENABLE_EXPERIMENTAL
 
-#include <glad/glad.h>       // Always include GLAD before GLFW
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <iostream>
-#include "Shader.h"
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
-#include "Mesh.h"
+#include <gtx/string_cast.hpp>
 
+#include "Shader.h"
+#include "Mesh.h"
 #include "Texture.h"
 #include "Material.h"
+#include "Model.h"
+#include "ModelLoader.h"
 #include "Camera/Camera.h"
-#include <gtx/string_cast.hpp>
-#include "Core/MiniEngineApp.h"
 #include "World/Scene.h"
 #include "World/Entity.h"
+#include "Core/MiniEngineApp.h"

@@ -2,16 +2,23 @@
 project(MiniEngine)
 
 set(CMAKE_CXX_STANDARD 17)
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
 
-# Add GLFW (must be CMake-compatible version)
 add_subdirectory(external/glfw)
+add_subdirectory(external/assimp)   # ← was missing
 
-# Include paths
 include_directories(
     external/glad/include
     external/glfw/include
-    external/glm           # For glm/glm.hpp
-    external/stb           # For stb_image.h if used
+    external/glm
+    external/stb
+    external/assimp/include         # ← was wrong
     src
     src/Core
     src/Rendering   
@@ -21,11 +28,8 @@ include_directories(
     src/Camera
 )
 
-# Copy Assets/ to build directory (shaders, textures, etc.)
 file(COPY Assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
-
-# Gather source files
 file(GLOB_RECURSE SOURCES
     src/Core/*.cpp
     src/Gameplay/*.cpp
@@ -36,8 +40,6 @@ file(GLOB_RECURSE SOURCES
     external/glad/src/glad.c
 )
 
-# Create executable
-add_executable(MiniEngine ${SOURCES} "src/World/Scene.h" "src/World/Entity.cpp" "src/World/Entity.h" "src/World/Scene.cpp")
+add_executable(MiniEngine ${SOURCES} "src/World/Scene.h" "src/World/Entity.cpp" "src/World/Entity.h" "src/World/Scene.cpp" "src/Rendering/Model.cpp" "src/Rendering/Model.h" "src/Rendering/ModelLoader.cpp" "src/Rendering/ModelLoader.h")
 
-# Link libraries
-target_link_libraries(MiniEngine glfw opengl32)
+target_link_libraries(MiniEngine glfw opengl32 assimp)

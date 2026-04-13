@@ -1,10 +1,18 @@
 #pragma once
 
 #include <vector>
+#include <glm.hpp>
+
+
+struct Vertex {
+    glm::vec3 Position;
+    glm::vec3 Normal;
+    glm::vec2 TexCoords;
+};
 
 class Mesh {
 public:
-    Mesh(const std::vector<float>& vertices, const std::vector<unsigned int>& indices, size_t stride);
+    Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices);
     ~Mesh();
 
     void Draw() const;

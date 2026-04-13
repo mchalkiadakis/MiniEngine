@@ -46,3 +46,25 @@ void Camera::ProcessKeyboard(float deltaTime, bool forward, bool backward, bool 
 
     m_Target = m_Position + m_Front;
 }
+
+void Camera::ProcessMouseMovement(float xOffset, float yOffset, bool constrainPitch) {
+    xOffset *= m_MouseSensitivity;
+    yOffset *= m_MouseSensitivity;
+
+    m_Yaw += xOffset;
+    m_Pitch += yOffset;
+
+    if (constrainPitch) {
+        if (m_Pitch > 89.0f) m_Pitch = 89.0f;
+        if (m_Pitch < -89.0f) m_Pitch = -89.0f;
+    }
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
+    front.y = sin(glm::radians(m_Pitch));
+    front.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
+
+    m_Front = glm::normalize(front);
+    m_Right = glm::normalize(glm::cross(m_Front, m_Up));
+    m_Target = m_Position + m_Front;
+}
