@@ -1,6 +1,6 @@
-
 #include "Scene.h"
 #include "Entity.h"
+#include "MiniEngine.h"
 
 Entity& Scene::CreateEntity(const std::string& name) {
     m_Entities.push_back(std::make_unique<Entity>(name));
@@ -13,8 +13,8 @@ void Scene::Update(float deltaTime) {
     }
 }
 
-void Scene::Render(const Camera& camera) {
+void Scene::Render(const RenderContext& ctx) {
     for (auto& entity : m_Entities) {
-        entity->Render(camera);
+        entity->Render(ctx);
     }
 }

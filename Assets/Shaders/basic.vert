@@ -9,8 +9,14 @@ uniform mat4 u_View;
 uniform mat4 u_Projection;
 
 out vec2 v_TexCoord;
+out vec3 v_Normal;
+out vec3 v_FragPos;
 
 void main() {
     gl_Position = u_Projection * u_View * u_Model * vec4(aPos, 1.0);
     v_TexCoord = aTexCoord;
+    v_FragPos = vec3(u_Model * vec4(aPos, 1.0));
+
+    // normal matrix corrects normals when the model is non-uniformly scaled
+    v_Normal = mat3(transpose(inverse(u_Model))) * aNormal;
 }

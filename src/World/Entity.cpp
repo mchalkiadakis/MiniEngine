@@ -28,20 +28,22 @@ void Entity::SetModel(std::unique_ptr<Model> model) {
     m_Model = std::move(model);
 }
 
-void Entity::Render(const Camera& camera) {
+void Entity::Render(const RenderContext& ctx) {
     if (m_Model) {
-        m_Model->Draw(camera, m_ModelMatrix);
+        m_Model->Draw(ctx, m_ModelMatrix);
         return;
     }
 
-    if (!m_Material || !m_Mesh)
-        return;
+    if (!m_Material || !m_Mesh) return;
 
+    auto shader = m_Material->GetShader();
     m_Material->Bind();
-    m_Material->GetShader()->SetUniformMat4("u_Model", glm::value_ptr(m_ModelMatrix));
-    m_Material->GetShader()->SetUniformMat4("u_View", glm::value_ptr(camera.GetViewMatrix()));
-    m_Material->GetShader()->SetUniformMat4("u_Projection", glm::value_ptr(camera.GetProjectionMatrix()));
-
+    shader->SetUniformMat4("u_Model", glm::value_ptr(m_ModelMatrix));
+    shader->SetUniformMat4("u_View", glm::value_ptr(ctx.camera.GetViewMatrix()));
+    shader->SetUniformMat4("u_Projection", glm::value_ptr(ctx.camera.GetProjectionMatrix()));
+    shader->SetUniform3f("u_LightDir", ctx.light.Direction);
+    shader->SetUniform3f("u_LightColor", ctx.light.Color);
+    shader->SetUniform3f("u_ViewPos", ctx.camera.GetPosition());
     m_Mesh->Draw();
 }
 void Entity::SetTransform(const glm::mat4& transform) {

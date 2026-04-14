@@ -6,6 +6,7 @@
 #include "Mesh.h"
 #include "Material.h"
 #include "Camera/Camera.h"
+#include "Rendering/Light.h"
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
@@ -19,7 +20,7 @@ public:
     };
 
     void AddSubMesh(std::unique_ptr<Mesh> mesh, std::unique_ptr<Material> material);
-    void Draw(const Camera& camera, const glm::mat4& modelMatrix) const;
+    void Draw(const RenderContext& ctx, const glm::mat4& modelMatrix) const;
 
 private:
     std::vector<SubMesh> m_SubMeshes;

@@ -2,8 +2,11 @@
 
 #include <string>
 #include <unordered_map>
+#include <glm.hpp>
+
 struct FromSourceTag {};
 inline constexpr FromSourceTag FromSource{};
+
 class Shader {
 public:
     Shader(const std::string& vertexPath, const std::string& fragmentPath);
@@ -11,11 +14,11 @@ public:
     ~Shader();
 
     void Use() const;
-    
-    // Uniform setters (we’ll expand as needed)
+
     void SetUniform1i(const std::string& name, int value);
     void SetUniform1f(const std::string& name, float value);
-    void SetUniformMat4(const std::string& name, const float* matrix); // expects glm::value_ptr(mat)
+    void SetUniform3f(const std::string& name, const glm::vec3& value);
+    void SetUniformMat4(const std::string& name, const float* matrix);
 
 private:
     unsigned int m_ID;

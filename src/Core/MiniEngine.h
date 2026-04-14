@@ -10,13 +10,14 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/string_cast.hpp>
 
+#include "Camera/Camera.h"
+#include "Rendering/Light.h"
 #include "Shader.h"
 #include "Mesh.h"
 #include "Texture.h"
 #include "Material.h"
 #include "Model.h"
 #include "ModelLoader.h"
-#include "Camera/Camera.h"
 #include "World/Scene.h"
 #include "World/Entity.h"
 #include "Core/MiniEngineApp.h"

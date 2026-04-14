@@ -103,13 +103,14 @@ bool MiniEngineApp::Init() {
         20, 21, 22,  22, 23, 20,  // bottom
     };
 
-
+	//Importing a model and rendering it in the scene
     auto shader = std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag");
     auto model = ModelLoader::Load("Assets/Models/backpack/backpack.obj", shader);
     if (model) {
         Entity& e = m_Scene->CreateEntity("Backpack");
         e.SetModel(std::move(model));
         e.SetPosition(glm::vec3(3.0f, 0.0f, 0.0f)); // offset so it doesn't overlap the pyramid/cube
+        e.EnableRotation(true);
     }
     else {
         std::cerr << "Failed to load backpack model\n";
@@ -168,7 +169,8 @@ void MiniEngineApp::Render() {
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    m_Scene->Render(*m_Camera);
+    RenderContext ctx{ *m_Camera, m_Light };
+    m_Scene->Render(ctx);
 }
 
 MiniEngineApp* MiniEngineApp::s_Instance = nullptr;

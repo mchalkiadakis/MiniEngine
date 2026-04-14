@@ -21,7 +21,7 @@ private:
 
     std::shared_ptr<Camera> m_Camera;
     std::unique_ptr<Scene>  m_Scene;
-
+    DirectionalLight m_Light;
     static MiniEngineApp* s_Instance;
 
     float m_LastMouseX = 400.0f;

@@ -9,7 +9,7 @@ public:
     void SetMesh(std::unique_ptr<Mesh> mesh);
     void SetMaterial(std::unique_ptr<Material> material);
     void Update(float deltaTime);
-    void Render(const Camera& camera);
+    void Render(const RenderContext& ctx);
     void SetTransform(const glm::mat4& transform);
     void SetPosition(const glm::vec3& pos) { m_Position = pos; }
     void EnableRotation(bool rotate) { m_ShouldRotate = rotate; }

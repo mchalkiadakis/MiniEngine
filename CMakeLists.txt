@@ -40,6 +40,6 @@ file(GLOB_RECURSE SOURCES
     external/glad/src/glad.c
 )
 
-add_executable(MiniEngine ${SOURCES} "src/World/Scene.h" "src/World/Entity.cpp" "src/World/Entity.h" "src/World/Scene.cpp" "src/Rendering/Model.cpp" "src/Rendering/Model.h" "src/Rendering/ModelLoader.cpp" "src/Rendering/ModelLoader.h")
+add_executable(MiniEngine ${SOURCES} "src/World/Scene.h" "src/World/Entity.cpp" "src/World/Entity.h" "src/World/Scene.cpp" "src/Rendering/Model.cpp" "src/Rendering/Model.h" "src/Rendering/ModelLoader.cpp" "src/Rendering/ModelLoader.h" "src/Rendering/Light.h")
 
 target_link_libraries(MiniEngine glfw opengl32 assimp)
