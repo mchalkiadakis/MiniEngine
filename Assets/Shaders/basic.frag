@@ -27,20 +27,20 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
     vec3 lightDir = normalize(light.position - fragPos);
     float distance = length(light.position - fragPos);
 
-    // attenuation — light falls off based on radius
     float attenuation = clamp(1.0 - (distance / light.radius), 0.0, 1.0);
-    attenuation *= attenuation; // square it for more natural falloff
+    attenuation = pow(attenuation, 3.0);
 
-    // diffuse
+    // small ambient so no face is completely black
+    vec3 ambient = 0.2 * u_LightColor;
+
     float diff = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = diff * light.color * light.intensity;
+    vec3 diffuse = diff * light.color * light.intensity * attenuation;
 
-    // specular
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
-    vec3 specular = spec * light.color * light.intensity * 0.3;
+    vec3 specular = spec * light.color * light.intensity * attenuation * 0.3;
 
-    return (diffuse + specular) * attenuation;
+    return ambient + diffuse + specular;
 }
 
 void main() {
@@ -49,7 +49,7 @@ void main() {
     vec3 viewDir  = normalize(u_ViewPos - v_FragPos);
 
     // ambient
-    vec3 ambient = 0.05 * u_LightColor;
+    vec3 ambient = 0.01 * u_LightColor;
 
     // directional light
     vec3 lightDir = normalize(u_LightDir);

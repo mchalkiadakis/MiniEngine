@@ -29,153 +29,81 @@ bool MiniEngineApp::Init() {
     glDisable(GL_CULL_FACE);
 
     m_Camera = std::make_shared<Camera>(45.0f, 800.0f / 600.0f, 0.1f, 5000.0f);
-    m_Camera->SetPosition(glm::vec3(0.0f, 0.0f, 5.0f));
-    m_Camera->SetTarget(glm::vec3(0.0f, 0.0f, -1.0f));
 
     s_Instance = this;
     glfwSetCursorPosCallback(m_Window, MouseCallback);
     glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    // point lights
-    PointLight torch;
-    torch.Position = glm::vec3(0.0f, 2.0f, 0.0f);
-    torch.Color = glm::vec3(1.0f, 0.6f, 0.2f);
-    torch.Intensity = 2.0f;
-    torch.Radius = 15.0f;
-    m_PointLights.push_back(torch);
-
     auto& assets = AssetManager::Get();
     auto basicShader = assets.LoadShader("Assets/Shaders/basic.vert",
         "Assets/Shaders/basic.frag");
 
-    // build the scene
-    auto scene = std::make_unique<Scene>();
-
-    scene->SetSkybox(std::make_unique<Skybox>(std::vector<std::string>{
-        "Assets/Skybox/right.jpg",
-            "Assets/Skybox/left.jpg",
-            "Assets/Skybox/top.jpg",
-            "Assets/Skybox/bottom.jpg",
-            "Assets/Skybox/front.jpg",
-            "Assets/Skybox/back.jpg"
-    }));
-
-    // CREATING PYRAMID ENTITY
-    std::vector<Vertex> pyramidVertices = {
-        { {  0.0f,  0.5f,  0.0f }, {  0.0f,  1.0f,  0.0f }, { 0.5f, 1.0f } },
-        { { -0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 0.0f } },
-        { {  0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 0.0f } },
-        { {  0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 1.0f, 1.0f } },
-        { { -0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 0.0f, 1.0f } },
-    };
-
-    std::vector<unsigned int> pyramidIndices = {
-        0, 1, 2,  0, 2, 3,  0, 3, 4,  0, 4, 1,
-        1, 4, 3,  1, 3, 2
-    };
-
-    Entity& entity = scene->CreateEntity("Pyramid");
-    entity.SetMesh(std::make_unique<Mesh>(pyramidVertices, pyramidIndices));
-    entity.SetMaterial(std::make_unique<Material>(
-        basicShader,
-        assets.LoadTexture("Assets/Textures/sand.jpg")
-    ));
-    entity.EnableRotation(true);
-
-    // CREATING CUBE
-    std::vector<Vertex> cubeVertices = {
-        // Front face
-        { { -0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 0.0f } },
-        { {  0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 0.0f } },
-        { {  0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 1.0f } },
-        { { -0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 1.0f } },
-        // Back face
-        { { -0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 0.0f, 0.0f } },
-        { {  0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 1.0f, 0.0f } },
-        { {  0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 1.0f, 1.0f } },
-        { { -0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 0.0f, 1.0f } },
-        // Right face
-        { {  0.5f, -0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f }, { 0.0f, 0.0f } },
-        { {  0.5f, -0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f }, { 1.0f, 0.0f } },
-        { {  0.5f,  0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f }, { 1.0f, 1.0f } },
-        { {  0.5f,  0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f }, { 0.0f, 1.0f } },
-        // Left face
-        { { -0.5f, -0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f }, { 0.0f, 0.0f } },
-        { { -0.5f, -0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f }, { 1.0f, 0.0f } },
-        { { -0.5f,  0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f }, { 1.0f, 1.0f } },
-        { { -0.5f,  0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f }, { 0.0f, 1.0f } },
-        // Top face
-        { { -0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f }, { 0.0f, 0.0f } },
-        { {  0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f }, { 1.0f, 0.0f } },
-        { {  0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f }, { 1.0f, 1.0f } },
-        { { -0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f }, { 0.0f, 1.0f } },
-        // Bottom face
-        { { -0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f }, { 0.0f, 0.0f } },
-        { {  0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f }, { 1.0f, 0.0f } },
-        { {  0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f }, { 1.0f, 1.0f } },
-        { { -0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f }, { 0.0f, 1.0f } },
-    };
-
-    std::vector<unsigned int> cubeIndices = {
-         0,  1,  2,   2,  3,  0,
-         4,  7,  6,   6,  5,  4,
-         8,  9, 10,  10, 11,  8,
-        12, 13, 14,  14, 15, 12,
-        16, 17, 18,  18, 19, 16,
-        20, 21, 22,  22, 23, 20,
-    };
-
-    auto model = ModelLoader::Load("Assets/Models/backpack/backpack.obj", basicShader);
-    if (model) {
-        Entity& e = scene->CreateEntity("Backpack");
-        e.SetModel(std::move(model));
-        e.SetPosition(glm::vec3(3.0f, 0.0f, 0.0f));
-        e.EnableRotation(true);
-    }
-    else {
-        std::cerr << "Failed to load backpack model\n";
-    }
-
-    auto& goldCube = scene->CreateEntity("Cube");
-    goldCube.SetMesh(std::make_unique<Mesh>(cubeVertices, cubeIndices));
-    goldCube.SetMaterial(std::make_unique<Material>(
-        basicShader,
-        assets.LoadTexture("Assets/Textures/gold.jpg")
-    ));
-    goldCube.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));
-    goldCube.EnableRotation(true);
-
-    TerrainConfig config;
-    config.Width = 64;
-    config.Depth = 64;
-    config.TileSize = 4.0f;
-    config.HeightScale = 90.0f;
-    config.NoiseScale = 0.02f;
-
-    auto terrainMat = std::make_shared<Material>(
-        basicShader,
-        assets.LoadTexture("Assets/Textures/sand.jpg")
-    );
-
-    auto chunkManager = std::make_unique<ChunkManager>(config, terrainMat);
-    chunkManager->SetViewDistance(4);
-    scene->SetChunkManager(std::move(chunkManager));
-
-    // test dungeon generation
+    // generate dungeon
     DungeonConfig dungeonCfg;
-    dungeonCfg.Seed = 42;
+    dungeonCfg.FloorWidth = 1000.0f;
+    dungeonCfg.FloorDepth = 1000.0f;
+    dungeonCfg.MinRoomWidth = 60.0f;
+    dungeonCfg.MaxRoomWidth = 120.0f;
+    dungeonCfg.MinRoomDepth = 60.0f;
+    dungeonCfg.MaxRoomDepth = 120.0f;
+    dungeonCfg.RoomHeight = 25.0f;
+    dungeonCfg.CorridorWidth = 12.0f;
+    dungeonCfg.NodePadding = 50.0f;
+    dungeonCfg.MinRooms = 6;
+    dungeonCfg.MaxRooms = 10;
     DungeonData dungeon = DungeonGenerator::Generate(dungeonCfg);
+
     std::cout << "Generated " << dungeon.Rooms.size() << " rooms and "
         << dungeon.Corridors.size() << " corridors\n";
-    for (auto& room : dungeon.Rooms) {
-        std::cout << "Room " << room.Index << " type "
-            << (int)room.Type << " at ("
-            << room.X << ", " << room.Z << ") size "
-            << room.Width << "x" << room.Depth << "\n";
+
+    // place camera in start room
+    const RoomData& startRoom = dungeon.Rooms[dungeon.StartRoomIndex];
+    glm::vec2 startCenter = startRoom.Center();
+    m_Camera->SetPosition(glm::vec3(startCenter.x, 2.0f, startCenter.y));
+    m_Camera->SetTarget(glm::vec3(startCenter.x, 2.0f, startCenter.y - 1.0f));
+
+    std::cout << "Start room: x=" << startRoom.X << " z=" << startRoom.Z
+        << " w=" << startRoom.Width << " d=" << startRoom.Depth << "\n";
+    std::cout << "Start room center: " << startCenter.x << ", " << startCenter.y << "\n";
+    std::cout << "Camera position: "
+        << m_Camera->GetPosition().x << ", "
+        << m_Camera->GetPosition().y << ", "
+        << m_Camera->GetPosition().z << "\n";
+
+    // place 4 torches near the corners of the start room
+    float margin = 8.0f;
+    std::vector<glm::vec3> torchPositions = {
+        { startRoom.X + margin,                       4.0f, startRoom.Z + margin },
+        { startRoom.X + startRoom.Width - margin,     4.0f, startRoom.Z + margin },
+        { startRoom.X + margin,                       4.0f, startRoom.Z + startRoom.Depth - margin },
+        { startRoom.X + startRoom.Width - margin,     4.0f, startRoom.Z + startRoom.Depth - margin }
+    };
+
+    for (auto& pos : torchPositions) {
+        PointLight torch;
+        torch.Position = pos;
+        torch.Color = glm::vec3(0.5f, 0.5f, 0.5f);
+        torch.Radius = 35.0f;
+        torch.Intensity = 8.0f;
+        m_PointLights.push_back(torch);
     }
 
-    // hand scene to scene manager
-    m_SceneManager.LoadScene(std::move(scene));
+    m_Light.Color = glm::vec3(1.0f, 1.0f, 1.0f);
+    m_Light.Direction = glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f));
+
+    auto wallMat = std::make_shared<Material>(
+        basicShader,
+        assets.LoadTexture("Assets/Textures/Rock.jpg")
+    );
+
+    auto floorMat = std::make_shared<Material>(
+        basicShader,
+        assets.LoadTexture("Assets/Textures/Cobblestone.jpg")
+    );
+
+    m_SceneManager.LoadScene(
+        std::make_unique<DungeonScene>(dungeon, wallMat, floorMat)
+    );
 
     return true;
 }
@@ -215,7 +143,7 @@ void MiniEngineApp::Update(float deltaTime) {
 }
 
 void MiniEngineApp::Render() {
-    glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     RenderContext ctx{ *m_Camera, m_Light, m_PointLights };

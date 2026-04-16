@@ -9,7 +9,6 @@ DungeonData DungeonGenerator::Generate(const DungeonConfig& config) {
     std::mt19937 rng(config.Seed);
     DungeonData data;
 
-    // create root BSP node covering the entire floor
     std::vector<BSPNode> nodes;
     BSPNode root;
     root.X = 0; root.Z = 0;
@@ -17,23 +16,26 @@ DungeonData DungeonGenerator::Generate(const DungeonConfig& config) {
     root.Depth = config.FloorDepth;
     nodes.push_back(root);
 
-    // recursively split until we have enough leaves
     int minSize = static_cast<int>(std::max(config.MaxRoomWidth,
-        config.MaxRoomDepth) + 10.0f);
-    for (int i = 0; i < (int)nodes.size(); i++) {
-        if (nodes[i].IsLeaf() &&
-            (int)data.Rooms.size() < config.MaxRooms) {
-            Split(nodes, i, minSize, rng);
+        config.MaxRoomDepth) + config.NodePadding);
+
+    // keep splitting until no more splits are possible
+    bool splitHappened = true;
+    while (splitHappened) {
+        splitHappened = false;
+        int count = static_cast<int>(nodes.size());
+        for (int i = 0; i < count; i++) {
+            if (nodes[i].IsLeaf() &&
+                (nodes[i].Width >= minSize * 2 ||
+                    nodes[i].Depth >= minSize * 2)) {
+                Split(nodes, i, minSize, rng);
+                splitHappened = true;
+            }
         }
     }
 
-    // place rooms in leaf nodes
     PlaceRooms(nodes, data, config, rng);
-
-    // connect adjacent rooms with corridors
     ConnectRooms(data, config);
-
-    // assign room types
     AssignRoomTypes(data, rng);
 
     return data;
@@ -83,18 +85,30 @@ void DungeonGenerator::PlaceRooms(std::vector<BSPNode>& nodes,
     for (auto& node : nodes) {
         if (!node.IsLeaf()) continue;
 
-        std::uniform_real_distribution<float> rw(cfg.MinRoomWidth,
-            std::min(cfg.MaxRoomWidth, node.Width - 4.0f));
-        std::uniform_real_distribution<float> rd(cfg.MinRoomDepth,
-            std::min(cfg.MaxRoomDepth, node.Depth - 4.0f));
+        // skip if node is too small for minimum room size
+        if (node.Width < cfg.MinRoomWidth + 4.0f ||
+            node.Depth < cfg.MinRoomDepth + 4.0f) continue;
+
+        float maxW = std::min(cfg.MaxRoomWidth, node.Width - 4.0f);
+        float maxD = std::min(cfg.MaxRoomDepth, node.Depth - 4.0f);
+
+        // skip if max is smaller than min after clamping
+        if (maxW < cfg.MinRoomWidth || maxD < cfg.MinRoomDepth) continue;
+
+        std::uniform_real_distribution<float> rw(cfg.MinRoomWidth, maxW);
+        std::uniform_real_distribution<float> rd(cfg.MinRoomDepth, maxD);
 
         float rWidth = rw(rng);
         float rDepth = rd(rng);
 
-        std::uniform_real_distribution<float> rx(node.X + 2.0f,
-            node.X + node.Width - rWidth - 2.0f);
-        std::uniform_real_distribution<float> rz(node.Z + 2.0f,
-            node.Z + node.Depth - rDepth - 2.0f);
+        float rxMax = node.X + node.Width - rWidth - 2.0f;
+        float rzMax = node.Z + node.Depth - rDepth - 2.0f;
+
+        // skip if placement range is invalid
+        if (rxMax < node.X + 2.0f || rzMax < node.Z + 2.0f) continue;
+
+        std::uniform_real_distribution<float> rx(node.X + 2.0f, rxMax);
+        std::uniform_real_distribution<float> rz(node.Z + 2.0f, rzMax);
 
         RoomData room;
         room.Index = static_cast<int>(data.Rooms.size());

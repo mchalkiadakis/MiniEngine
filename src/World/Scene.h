@@ -3,20 +3,20 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include "IScene.h"
 #include "ChunkManager.h"
 #include "Skybox.h"
 #include "Rendering/Light.h"
-#include "Rendering/RenderContext.h"
 
 class Entity;
 
-class Scene {
+class Scene : public IScene {
 public:
     Entity& CreateEntity(const std::string& name);
     void SetChunkManager(std::unique_ptr<ChunkManager> chunkManager);
     void SetSkybox(std::unique_ptr<Skybox> skybox);
-    void Update(float deltaTime, const Camera& camera);
-    void Render(const RenderContext& ctx);
+    void Update(float deltaTime, const Camera& camera) override;
+    void Render(const RenderContext& ctx) const override;
 
 private:
     std::vector<std::unique_ptr<Entity>> m_Entities;

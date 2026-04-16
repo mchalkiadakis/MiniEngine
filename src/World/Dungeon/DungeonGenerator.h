@@ -13,9 +13,9 @@ struct DungeonConfig {
     float MaxRoomDepth = 40.0f;
     float RoomHeight = 8.0f;
     float CorridorWidth = 6.0f;
+    float NodePadding = 40.0f; // extra space per BSP node beyond max room size
     int   Seed = 42;
 };
-
 class DungeonGenerator {
 public:
     DungeonGenerator() = delete;

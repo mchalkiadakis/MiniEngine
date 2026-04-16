@@ -10,6 +10,10 @@
 #include <gtc/type_ptr.hpp>
 #include <gtx/string_cast.hpp>
 
+#include "World/IScene.h"
+#include "World/Dungeon/DungeonScene.h"
+#include "World/Dungeon/DungeonMeshBuilder.h"
+#include "World/Dungeon/DungeonRoom.h"
 #include "World/Dungeon/RoomData.h"
 #include "World/Dungeon/DungeonGenerator.h"
 #include "Camera/Camera.h"

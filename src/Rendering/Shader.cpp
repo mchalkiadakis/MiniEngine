@@ -111,6 +111,7 @@ void Shader::SetUniformMat3(const std::string& name, const float* matrix) {
 void Shader::SetPointLights(const std::vector<PointLight>& lights) {
     glUseProgram(m_ID);
     int count = static_cast<int>(std::min(lights.size(), (size_t)16));
+    //std::cout << "Setting " << count << " point lights\n";
     SetUniform1i("u_NumPointLights", count);
 
     for (int i = 0; i < count; i++) {

@@ -11,10 +11,21 @@ enum class RoomType {
     Corridor
 };
 
+
+enum class WallSide {
+    North, // +Z wall
+    South, // -Z wall
+    East,  // +X wall
+    West   // -X wall
+};
+
 struct DoorData {
-    glm::vec2 Position;  // center of door in world space
-    glm::vec2 Direction; // which wall it's on (normalized)
+    glm::vec2 Position;   // center of door in world space
+    glm::vec2 Direction;  // normalized direction
     int       ConnectsTo; // index of connected room
+    WallSide  Side;       // which wall this door is on
+    float     CenterAlong; // position along the wall (0-1)
+    float     Width = 6.0f; // door opening width
 };
 
 struct RoomData {
