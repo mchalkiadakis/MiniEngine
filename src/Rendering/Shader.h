@@ -19,6 +19,8 @@ public:
     void SetUniform1f(const std::string& name, float value);
     void SetUniform3f(const std::string& name, const glm::vec3& value);
     void SetUniformMat4(const std::string& name, const float* matrix);
+    unsigned int GetID() const { return m_ID; }
+    void SetUniformMat3(const std::string& name, const float* matrix);
 
 private:
     unsigned int m_ID;

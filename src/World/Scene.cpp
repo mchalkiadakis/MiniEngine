@@ -1,5 +1,6 @@
 #include "Scene.h"
 #include "Entity.h"
+#include <algorithm>
 #include "MiniEngine.h"
 
 Entity& Scene::CreateEntity(const std::string& name) {
@@ -32,6 +33,23 @@ void Scene::Render(const RenderContext& ctx) {
     if (m_ChunkManager)
         m_ChunkManager->Render(ctx);
 
+    // collect and sort draw calls by shader to minimize rebinds
+    struct DrawCall {
+        Entity* entity;
+        unsigned int shaderID;
+    };
+
+    std::vector<DrawCall> drawCalls;
+    drawCalls.reserve(m_Entities.size());
+
     for (auto& entity : m_Entities)
-        entity->Render(ctx);
+        drawCalls.push_back({ entity.get(), entity->GetShaderID() });
+
+    std::sort(drawCalls.begin(), drawCalls.end(),
+        [](const DrawCall& a, const DrawCall& b) {
+            return a.shaderID < b.shaderID;
+        });
+
+    for (auto& dc : drawCalls)
+        dc.entity->Render(ctx);
 }

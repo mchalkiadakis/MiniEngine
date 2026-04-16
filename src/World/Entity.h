@@ -13,6 +13,9 @@ public:
     void SetTransform(const glm::mat4& transform);
     void SetPosition(const glm::vec3& pos) { m_Position = pos; }
     void EnableRotation(bool rotate) { m_ShouldRotate = rotate; }
+    unsigned int GetShaderID() const {
+        return m_Material ? m_Material->GetShader()->GetID() : 0;
+    }
 private:
     bool m_ManualTransform = false;
     std::string m_Name;

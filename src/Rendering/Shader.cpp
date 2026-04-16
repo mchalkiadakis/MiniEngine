@@ -104,3 +104,7 @@ unsigned int Shader::CreateProgram(const std::string& vertexSource, const std::s
 
     return program;
 }
+void Shader::SetUniformMat3(const std::string& name, const float* matrix) {
+    glUseProgram(m_ID);
+    glUniformMatrix3fv(GetUniformLocation(name), 1, GL_FALSE, matrix);
+}
