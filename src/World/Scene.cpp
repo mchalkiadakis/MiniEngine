@@ -7,14 +7,31 @@ Entity& Scene::CreateEntity(const std::string& name) {
     return *m_Entities.back();
 }
 
-void Scene::Update(float deltaTime) {
-    for (auto& entity : m_Entities) {
+
+void Scene::SetSkybox(std::unique_ptr<Skybox> skybox) {
+    m_Skybox = std::move(skybox);
+}
+
+
+void Scene::SetChunkManager(std::unique_ptr<ChunkManager> chunkManager) {
+    m_ChunkManager = std::move(chunkManager);
+}
+
+void Scene::Update(float deltaTime, const Camera& camera) {
+    for (auto& entity : m_Entities)
         entity->Update(deltaTime);
-    }
+
+    if (m_ChunkManager)
+        m_ChunkManager->Update(camera);
 }
 
 void Scene::Render(const RenderContext& ctx) {
-    for (auto& entity : m_Entities) {
+    if (m_Skybox)
+        m_Skybox->Render(ctx);
+
+    if (m_ChunkManager)
+        m_ChunkManager->Render(ctx);
+
+    for (auto& entity : m_Entities)
         entity->Render(ctx);
-    }
 }

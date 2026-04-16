@@ -28,6 +28,7 @@ void Entity::SetModel(std::unique_ptr<Model> model) {
     m_Model = std::move(model);
 }
 
+//expensive
 void Entity::Render(const RenderContext& ctx) {
     if (m_Model) {
         m_Model->Draw(ctx, m_ModelMatrix);

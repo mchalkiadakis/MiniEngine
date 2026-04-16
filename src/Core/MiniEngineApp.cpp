@@ -28,7 +28,7 @@ bool MiniEngineApp::Init() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    m_Camera = std::make_shared<Camera>(45.0f, 800.0f / 600.0f, 0.1f, 100.0f);
+    m_Camera = std::make_shared<Camera>(45.0f, 800.0f / 600.0f, 0.1f, 5000.0f);
     m_Camera->SetPosition(glm::vec3(0.0f, 0.0f, 5.0f));
     m_Camera->SetTarget(glm::vec3(0.0f, 0.0f, -1.0f));
 
@@ -37,6 +37,18 @@ bool MiniEngineApp::Init() {
     glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     m_Scene = std::make_unique<Scene>();
+
+    m_Scene->SetSkybox(std::make_unique<Skybox>(std::vector<std::string>{
+        "Assets/Skybox/right.jpg",
+            "Assets/Skybox/left.jpg",
+            "Assets/Skybox/top.jpg",
+            "Assets/Skybox/bottom.jpg",
+            "Assets/Skybox/front.jpg",
+            "Assets/Skybox/back.jpg"
+    }));
+
+    auto& assets = AssetManager::Get();
+    auto basicShader = assets.LoadShader("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag");
 
     // CREATING PYRAMID ENTITY
     std::vector<Vertex> pyramidVertices = {
@@ -55,8 +67,8 @@ bool MiniEngineApp::Init() {
     Entity& entity = m_Scene->CreateEntity("Pyramid");
     entity.SetMesh(std::make_unique<Mesh>(pyramidVertices, pyramidIndices));
     entity.SetMaterial(std::make_unique<Material>(
-        std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag"),
-        std::make_shared<Texture>("Assets/Textures/sand.jpg")
+        basicShader,
+        assets.LoadTexture("Assets/Textures/sand.jpg")
     ));
     entity.EnableRotation(true);
 
@@ -95,38 +107,49 @@ bool MiniEngineApp::Init() {
     };
 
     std::vector<unsigned int> cubeIndices = {
-         0,  1,  2,   2,  3,  0,  // front
-         4,  7,  6,   6,  5,  4,  // back
-         8,  9, 10,  10, 11,  8,  // right
-        12, 13, 14,  14, 15, 12,  // left
-        16, 17, 18,  18, 19, 16,  // top
-        20, 21, 22,  22, 23, 20,  // bottom
+         0,  1,  2,   2,  3,  0,
+         4,  7,  6,   6,  5,  4,
+         8,  9, 10,  10, 11,  8,
+        12, 13, 14,  14, 15, 12,
+        16, 17, 18,  18, 19, 16,
+        20, 21, 22,  22, 23, 20,
     };
 
-	//Importing a model and rendering it in the scene
-    auto shader = std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag");
-    auto model = ModelLoader::Load("Assets/Models/backpack/backpack.obj", shader);
+    auto model = ModelLoader::Load("Assets/Models/backpack/backpack.obj", basicShader);
     if (model) {
         Entity& e = m_Scene->CreateEntity("Backpack");
         e.SetModel(std::move(model));
-        e.SetPosition(glm::vec3(3.0f, 0.0f, 0.0f)); // offset so it doesn't overlap the pyramid/cube
+        e.SetPosition(glm::vec3(3.0f, 0.0f, 0.0f));
         e.EnableRotation(true);
     }
     else {
         std::cerr << "Failed to load backpack model\n";
     }
 
-
-
     auto& goldCube = m_Scene->CreateEntity("Cube");
     goldCube.SetMesh(std::make_unique<Mesh>(cubeVertices, cubeIndices));
     goldCube.SetMaterial(std::make_unique<Material>(
-        std::make_shared<Shader>("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag"),
-        std::make_shared<Texture>("Assets/Textures/gold.jpg")
+        basicShader,
+        assets.LoadTexture("Assets/Textures/gold.jpg")
     ));
     goldCube.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));
     goldCube.EnableRotation(true);
 
+    TerrainConfig config;
+    config.Width = 64;
+    config.Depth = 64;
+    config.TileSize = 4.0f;
+    config.HeightScale = 90.0f;
+    config.NoiseScale = 0.02f;
+
+    auto terrainMat = std::make_shared<Material>(
+        basicShader,
+        assets.LoadTexture("Assets/Textures/sand.jpg")
+    );
+
+    auto chunkManager = std::make_unique<ChunkManager>(config, terrainMat);
+    chunkManager->SetViewDistance(4);
+    m_Scene->SetChunkManager(std::move(chunkManager));
 
     return true;
 }
@@ -162,7 +185,7 @@ void MiniEngineApp::PollInput(float deltaTime) {
 }
 
 void MiniEngineApp::Update(float deltaTime) {
-    m_Scene->Update(deltaTime);
+    m_Scene->Update(deltaTime, *m_Camera);
 }
 
 void MiniEngineApp::Render() {
