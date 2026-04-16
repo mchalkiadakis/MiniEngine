@@ -1,9 +1,6 @@
-// MiniEngineApp.h
 #pragma once
-
 #include "MiniEngine.h"
-#include "World/Scene.h"
-#include "Camera/Camera.h"
+#include "Core/SceneManager.h"
 
 class MiniEngineApp {
 public:
@@ -18,13 +15,13 @@ private:
     void Render();
 
     GLFWwindow* m_Window = nullptr;
-
     std::shared_ptr<Camera> m_Camera;
-    std::unique_ptr<Scene>  m_Scene;
-    DirectionalLight m_Light;
-    static MiniEngineApp* s_Instance;
+    SceneManager            m_SceneManager;
+    DirectionalLight        m_Light;
+    std::vector<PointLight> m_PointLights;
 
-    float m_LastMouseX = 400.0f;
-    float m_LastMouseY = 300.0f;
-    bool  m_FirstMouse = true;
+    static MiniEngineApp* s_Instance;
+    float                   m_LastMouseX = 400.0f;
+    float                   m_LastMouseY = 300.0f;
+    bool                    m_FirstMouse = true;
 };

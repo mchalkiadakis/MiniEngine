@@ -36,9 +36,22 @@ bool MiniEngineApp::Init() {
     glfwSetCursorPosCallback(m_Window, MouseCallback);
     glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    m_Scene = std::make_unique<Scene>();
+    // point lights
+    PointLight torch;
+    torch.Position = glm::vec3(0.0f, 2.0f, 0.0f);
+    torch.Color = glm::vec3(1.0f, 0.6f, 0.2f);
+    torch.Intensity = 2.0f;
+    torch.Radius = 15.0f;
+    m_PointLights.push_back(torch);
 
-    m_Scene->SetSkybox(std::make_unique<Skybox>(std::vector<std::string>{
+    auto& assets = AssetManager::Get();
+    auto basicShader = assets.LoadShader("Assets/Shaders/basic.vert",
+        "Assets/Shaders/basic.frag");
+
+    // build the scene
+    auto scene = std::make_unique<Scene>();
+
+    scene->SetSkybox(std::make_unique<Skybox>(std::vector<std::string>{
         "Assets/Skybox/right.jpg",
             "Assets/Skybox/left.jpg",
             "Assets/Skybox/top.jpg",
@@ -46,9 +59,6 @@ bool MiniEngineApp::Init() {
             "Assets/Skybox/front.jpg",
             "Assets/Skybox/back.jpg"
     }));
-
-    auto& assets = AssetManager::Get();
-    auto basicShader = assets.LoadShader("Assets/Shaders/basic.vert", "Assets/Shaders/basic.frag");
 
     // CREATING PYRAMID ENTITY
     std::vector<Vertex> pyramidVertices = {
@@ -64,7 +74,7 @@ bool MiniEngineApp::Init() {
         1, 4, 3,  1, 3, 2
     };
 
-    Entity& entity = m_Scene->CreateEntity("Pyramid");
+    Entity& entity = scene->CreateEntity("Pyramid");
     entity.SetMesh(std::make_unique<Mesh>(pyramidVertices, pyramidIndices));
     entity.SetMaterial(std::make_unique<Material>(
         basicShader,
@@ -117,7 +127,7 @@ bool MiniEngineApp::Init() {
 
     auto model = ModelLoader::Load("Assets/Models/backpack/backpack.obj", basicShader);
     if (model) {
-        Entity& e = m_Scene->CreateEntity("Backpack");
+        Entity& e = scene->CreateEntity("Backpack");
         e.SetModel(std::move(model));
         e.SetPosition(glm::vec3(3.0f, 0.0f, 0.0f));
         e.EnableRotation(true);
@@ -126,7 +136,7 @@ bool MiniEngineApp::Init() {
         std::cerr << "Failed to load backpack model\n";
     }
 
-    auto& goldCube = m_Scene->CreateEntity("Cube");
+    auto& goldCube = scene->CreateEntity("Cube");
     goldCube.SetMesh(std::make_unique<Mesh>(cubeVertices, cubeIndices));
     goldCube.SetMaterial(std::make_unique<Material>(
         basicShader,
@@ -149,7 +159,23 @@ bool MiniEngineApp::Init() {
 
     auto chunkManager = std::make_unique<ChunkManager>(config, terrainMat);
     chunkManager->SetViewDistance(4);
-    m_Scene->SetChunkManager(std::move(chunkManager));
+    scene->SetChunkManager(std::move(chunkManager));
+
+    // test dungeon generation
+    DungeonConfig dungeonCfg;
+    dungeonCfg.Seed = 42;
+    DungeonData dungeon = DungeonGenerator::Generate(dungeonCfg);
+    std::cout << "Generated " << dungeon.Rooms.size() << " rooms and "
+        << dungeon.Corridors.size() << " corridors\n";
+    for (auto& room : dungeon.Rooms) {
+        std::cout << "Room " << room.Index << " type "
+            << (int)room.Type << " at ("
+            << room.X << ", " << room.Z << ") size "
+            << room.Width << "x" << room.Depth << "\n";
+    }
+
+    // hand scene to scene manager
+    m_SceneManager.LoadScene(std::move(scene));
 
     return true;
 }
@@ -185,15 +211,15 @@ void MiniEngineApp::PollInput(float deltaTime) {
 }
 
 void MiniEngineApp::Update(float deltaTime) {
-    m_Scene->Update(deltaTime, *m_Camera);
+    m_SceneManager.Update(deltaTime, *m_Camera);
 }
 
 void MiniEngineApp::Render() {
     glClearColor(0.1f, 0.2f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    RenderContext ctx{ *m_Camera, m_Light };
-    m_Scene->Render(ctx);
+    RenderContext ctx{ *m_Camera, m_Light, m_PointLights };
+    m_SceneManager.Render(ctx);
 }
 
 MiniEngineApp* MiniEngineApp::s_Instance = nullptr;

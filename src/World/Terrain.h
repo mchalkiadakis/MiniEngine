@@ -3,6 +3,7 @@
 #include "Rendering/Material.h"
 #include "Rendering/Light.h"
 #include "TerrainGenerator.h"
+#include "Rendering/RenderContext.h"
 #include <memory>
 
 class Terrain {

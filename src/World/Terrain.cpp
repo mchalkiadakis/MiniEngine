@@ -19,14 +19,7 @@ void Terrain::Render(const RenderContext& ctx) const {
 
     auto shader = m_Material->GetShader();
     m_Material->Bind();
-
-    shader->SetUniformMat4("u_Model", glm::value_ptr(m_ModelMatrix));
-    shader->SetUniformMat4("u_View", glm::value_ptr(ctx.camera.GetViewMatrix()));
-    shader->SetUniformMat4("u_Projection", glm::value_ptr(ctx.camera.GetProjectionMatrix()));
-    shader->SetUniformMat3("u_NormalMatrix", glm::value_ptr(normalMatrix));
-    shader->SetUniform3f("u_LightDir", ctx.light.Direction);
-    shader->SetUniform3f("u_LightColor", ctx.light.Color);
-    shader->SetUniform3f("u_ViewPos", ctx.camera.GetPosition());
+    ctx.ApplyToShader(*shader, m_ModelMatrix);
 
     m_Mesh.Draw();
 }

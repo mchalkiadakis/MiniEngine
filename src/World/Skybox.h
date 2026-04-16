@@ -4,6 +4,7 @@
 #include <string>
 #include "CubemapTexture.h"
 #include "Shader.h"
+#include "Rendering/RenderContext.h"
 #include "Light.h"
 
 class Skybox {

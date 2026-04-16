@@ -7,6 +7,7 @@
 #include "Rendering/Material.h"
 #include "Camera/Camera.h"
 #include "FastNoiseLite.h"
+#include "Rendering/RenderContext.h"
 
 class ChunkManager {
 public:

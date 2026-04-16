@@ -23,7 +23,7 @@ public:
     static void CalculateNormalsWithOffset(std::vector<Vertex>& vertices,
         const TerrainConfig& cfg, const FastNoiseLite& noise, float offsetX, float offsetZ);
 
-private:
+private: 
     // Value noise helpers
     static float GetHeight(float x, float z, float scale);
     static float Noise(int x, int z);

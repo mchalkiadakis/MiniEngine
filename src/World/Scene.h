@@ -6,6 +6,7 @@
 #include "ChunkManager.h"
 #include "Skybox.h"
 #include "Rendering/Light.h"
+#include "Rendering/RenderContext.h"
 
 class Entity;
 

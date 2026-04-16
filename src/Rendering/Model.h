@@ -7,6 +7,7 @@
 #include "Material.h"
 #include "Camera/Camera.h"
 #include "Rendering/Light.h"
+#include "Rendering/RenderContext.h"
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>

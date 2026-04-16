@@ -108,3 +108,16 @@ void Shader::SetUniformMat3(const std::string& name, const float* matrix) {
     glUseProgram(m_ID);
     glUniformMatrix3fv(GetUniformLocation(name), 1, GL_FALSE, matrix);
 }
+void Shader::SetPointLights(const std::vector<PointLight>& lights) {
+    glUseProgram(m_ID);
+    int count = static_cast<int>(std::min(lights.size(), (size_t)16));
+    SetUniform1i("u_NumPointLights", count);
+
+    for (int i = 0; i < count; i++) {
+        std::string base = "u_PointLights[" + std::to_string(i) + "].";
+        SetUniform3f(base + "position", lights[i].Position);
+        SetUniform3f(base + "color", lights[i].Color);
+        SetUniform1f(base + "intensity", lights[i].Intensity);
+        SetUniform1f(base + "radius", lights[i].Radius);
+    }
+}

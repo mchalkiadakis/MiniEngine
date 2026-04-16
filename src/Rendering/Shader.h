@@ -3,6 +3,8 @@
 #include <string>
 #include <unordered_map>
 #include <glm.hpp>
+#include "PointLight.h"
+#include <vector>
 
 struct FromSourceTag {};
 inline constexpr FromSourceTag FromSource{};
@@ -21,6 +23,7 @@ public:
     void SetUniformMat4(const std::string& name, const float* matrix);
     unsigned int GetID() const { return m_ID; }
     void SetUniformMat3(const std::string& name, const float* matrix);
+    void SetPointLights(const std::vector<PointLight>& lights);
 
 private:
     unsigned int m_ID;
