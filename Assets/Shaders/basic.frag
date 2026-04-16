@@ -11,7 +11,7 @@ uniform vec3 u_LightDir;
 uniform vec3 u_LightColor;
 uniform vec3 u_ViewPos;
 
-#define MAX_POINT_LIGHTS 16
+#define MAX_POINT_LIGHTS 128
 
 struct PointLight {
     vec3  position;

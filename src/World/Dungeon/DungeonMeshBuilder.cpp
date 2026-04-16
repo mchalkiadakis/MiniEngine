@@ -1,6 +1,7 @@
 #include "DungeonMeshBuilder.h"
 #include "Rendering/Mesh.h"
 #include <algorithm>
+#include <iostream>
 
 // helper to add a quad as two triangles
 void DungeonMeshBuilder::AddQuad(std::vector<Vertex>& vertices,
@@ -162,6 +163,10 @@ void DungeonMeshBuilder::AddWallWithDoors(std::vector<Vertex>& vertices,
 
 void DungeonMeshBuilder::BuildRoom(DynamicMesh& mesh, const RoomData& room)
 {
+
+    std::cout << "Building room " << room.Index
+        << " at (" << room.X << ", " << room.Z << ")"
+        << " size " << room.Width << "x" << room.Depth << "\n";
     std::vector<Vertex>       vertices;
     std::vector<unsigned int> indices;
 

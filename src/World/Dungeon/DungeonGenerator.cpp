@@ -123,10 +123,8 @@ void DungeonGenerator::PlaceRooms(std::vector<BSPNode>& nodes,
     }
 }
 
-void DungeonGenerator::ConnectRooms(DungeonData& data,
-    const DungeonConfig& cfg)
+void DungeonGenerator::ConnectRooms(DungeonData& data, const DungeonConfig& cfg)
 {
-    // connect each room to its nearest unconnected neighbor
     for (int i = 0; i < (int)data.Rooms.size(); i++) {
         float minDist = FLT_MAX;
         int   nearest = -1;
@@ -134,7 +132,6 @@ void DungeonGenerator::ConnectRooms(DungeonData& data,
         for (int j = 0; j < (int)data.Rooms.size(); j++) {
             if (i == j) continue;
 
-            // check if already connected
             bool connected = false;
             for (auto& d : data.Rooms[i].Doors)
                 if (d.ConnectsTo == j) { connected = true; break; }
@@ -152,22 +149,79 @@ void DungeonGenerator::ConnectRooms(DungeonData& data,
 
         if (nearest == -1) continue;
 
-        // create corridor between centers
-        glm::vec2 ci = data.Rooms[i].Center();
-        glm::vec2 cj = data.Rooms[nearest].Center();
+        RoomData& roomI = data.Rooms[i];
+        RoomData& roomJ = data.Rooms[nearest];
 
-        // add doors
+        glm::vec2 ci = roomI.Center();
+        glm::vec2 cj = roomJ.Center();
+
+        // determine which wall faces the other room
+        auto GetWallSide = [](const glm::vec2& from, const glm::vec2& to) -> WallSide {
+            glm::vec2 d = to - from;
+            if (std::abs(d.x) > std::abs(d.y))
+                return d.x > 0 ? WallSide::East : WallSide::West;
+            else
+                return d.y > 0 ? WallSide::North : WallSide::South;
+            };
+
+        // get door position on wall given side and corridor center
+        auto GetDoorPosition = [&](const RoomData& room, WallSide side,
+            float corridorCenterX, float corridorCenterZ) -> glm::vec2 {
+                float hw = cfg.CorridorWidth * 0.5f;
+                switch (side) {
+                case WallSide::North:
+                    return glm::vec2(
+                        glm::clamp(corridorCenterX, room.X + hw, room.X + room.Width - hw),
+                        room.Z + room.Depth);
+                case WallSide::South:
+                    return glm::vec2(
+                        glm::clamp(corridorCenterX, room.X + hw, room.X + room.Width - hw),
+                        room.Z);
+                case WallSide::East:
+                    return glm::vec2(
+                        room.X + room.Width,
+                        glm::clamp(corridorCenterZ, room.Z + hw, room.Z + room.Depth - hw));
+                case WallSide::West:
+                    return glm::vec2(
+                        room.X,
+                        glm::clamp(corridorCenterZ, room.Z + hw, room.Z + room.Depth - hw));
+                default:
+                    return glm::vec2(0.0f);
+                }
+            };
+
+        WallSide sideI = GetWallSide(ci, cj);
+        WallSide sideJ = GetWallSide(cj, ci);
+
+        float corridorCenterX = (ci.x + cj.x) * 0.5f;
+        float corridorCenterZ = (ci.y + cj.y) * 0.5f;
+
+        glm::vec2 doorPosI = GetDoorPosition(roomI, sideI, corridorCenterX, corridorCenterZ);
+        glm::vec2 doorPosJ = GetDoorPosition(roomJ, sideJ, corridorCenterX, corridorCenterZ);
+
+        // door for roomI
         DoorData doorI;
         doorI.ConnectsTo = nearest;
-        doorI.Position = ci;
-        data.Rooms[i].Doors.push_back(doorI);
+        doorI.Position = doorPosI;
+        doorI.Side = sideI;
+        doorI.Width = cfg.CorridorWidth;
+        doorI.CenterAlong = (sideI == WallSide::East || sideI == WallSide::West)
+            ? (doorPosI.y - roomI.Z) / roomI.Depth
+            : (doorPosI.x - roomI.X) / roomI.Width;
+        roomI.Doors.push_back(doorI);
 
+        // door for roomJ
         DoorData doorJ;
         doorJ.ConnectsTo = i;
-        doorJ.Position = cj;
-        data.Rooms[nearest].Doors.push_back(doorJ);
+        doorJ.Position = doorPosJ;
+        doorJ.Side = sideJ;
+        doorJ.Width = cfg.CorridorWidth;
+        doorJ.CenterAlong = (sideJ == WallSide::East || sideJ == WallSide::West)
+            ? (doorPosJ.y - roomJ.Z) / roomJ.Depth
+            : (doorPosJ.x - roomJ.X) / roomJ.Width;
+        roomJ.Doors.push_back(doorJ);
 
-        // L-shaped corridor — horizontal then vertical
+        // L-shaped corridors
         float hw = cfg.CorridorWidth * 0.5f;
 
         CorridorData hCorridor;

@@ -8,6 +8,7 @@
 #include "Camera/Camera.h"
 #include <vector>
 #include <memory>
+#include <glm.hpp>
 
 class DungeonScene : public IScene {
 public:
@@ -18,10 +19,13 @@ public:
     void Update(float deltaTime, const Camera& camera) override;
     void Render(const RenderContext& ctx) const override;
 
+    const std::vector<glm::vec3>& GetTorchPositions() const { return m_Torches; }
+
 private:
     std::vector<DungeonRoom>  m_Rooms;
     std::vector<DynamicMesh>  m_CorridorMeshes;
     std::shared_ptr<Material> m_WallMaterial;
     std::shared_ptr<Material> m_FloorMaterial;
+    std::vector<glm::vec3>    m_Torches;
     DungeonData               m_Data;
 };

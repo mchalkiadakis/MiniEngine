@@ -24,7 +24,7 @@ bool MiniEngineApp::Init() {
         return false;
     }
 
-    glViewport(0, 0, 800, 600);
+    glViewport(0, 0, 900, 800);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
@@ -46,7 +46,7 @@ bool MiniEngineApp::Init() {
     dungeonCfg.MaxRoomWidth = 120.0f;
     dungeonCfg.MinRoomDepth = 60.0f;
     dungeonCfg.MaxRoomDepth = 120.0f;
-    dungeonCfg.RoomHeight = 25.0f;
+    dungeonCfg.RoomHeight = 50.0f;
     dungeonCfg.CorridorWidth = 12.0f;
     dungeonCfg.NodePadding = 50.0f;
     dungeonCfg.MinRooms = 6;
@@ -55,40 +55,23 @@ bool MiniEngineApp::Init() {
 
     std::cout << "Generated " << dungeon.Rooms.size() << " rooms and "
         << dungeon.Corridors.size() << " corridors\n";
+  
 
     // place camera in start room
     const RoomData& startRoom = dungeon.Rooms[dungeon.StartRoomIndex];
     glm::vec2 startCenter = startRoom.Center();
     m_Camera->SetPosition(glm::vec3(startCenter.x, 2.0f, startCenter.y));
-    m_Camera->SetTarget(glm::vec3(startCenter.x, 2.0f, startCenter.y - 1.0f));
+    m_Camera->SetTarget(glm::vec3(startCenter.x + 1.0f, 2.0f, startCenter.y));
 
     std::cout << "Start room: x=" << startRoom.X << " z=" << startRoom.Z
         << " w=" << startRoom.Width << " d=" << startRoom.Depth << "\n";
-    std::cout << "Start room center: " << startCenter.x << ", " << startCenter.y << "\n";
     std::cout << "Camera position: "
         << m_Camera->GetPosition().x << ", "
         << m_Camera->GetPosition().y << ", "
         << m_Camera->GetPosition().z << "\n";
 
-    // place 4 torches near the corners of the start room
-    float margin = 8.0f;
-    std::vector<glm::vec3> torchPositions = {
-        { startRoom.X + margin,                       4.0f, startRoom.Z + margin },
-        { startRoom.X + startRoom.Width - margin,     4.0f, startRoom.Z + margin },
-        { startRoom.X + margin,                       4.0f, startRoom.Z + startRoom.Depth - margin },
-        { startRoom.X + startRoom.Width - margin,     4.0f, startRoom.Z + startRoom.Depth - margin }
-    };
-
-    for (auto& pos : torchPositions) {
-        PointLight torch;
-        torch.Position = pos;
-        torch.Color = glm::vec3(0.5f, 0.5f, 0.5f);
-        torch.Radius = 35.0f;
-        torch.Intensity = 8.0f;
-        m_PointLights.push_back(torch);
-    }
-
-    m_Light.Color = glm::vec3(1.0f, 1.0f, 1.0f);
+    m_Light.Color = glm::vec3(0.02f, 0.02f, 0.05f);
+    //m_Light.Color = glm::vec3(0.5f, 0.5f, 0.5f);
     m_Light.Direction = glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f));
 
     auto wallMat = std::make_shared<Material>(
@@ -104,6 +87,31 @@ bool MiniEngineApp::Init() {
     m_SceneManager.LoadScene(
         std::make_unique<DungeonScene>(dungeon, wallMat, floorMat)
     );
+
+    // register all dungeon torches as point lights
+    auto* dungeonScene = static_cast<DungeonScene*>(m_SceneManager.GetCurrentScene());
+    for (auto& pos : dungeonScene->GetTorchPositions()) {
+        PointLight torch;
+        torch.Position = pos;
+        torch.Color = glm::vec3(1.0f, 0.4f, 0.05f);
+        torch.Radius = 35.0f;
+        torch.Intensity = 8.0f;
+        m_PointLights.push_back(torch);
+    }
+
+    std::cout << "Registered " << m_PointLights.size() << " torches\n";
+    std::cout << "Torch count: " << dungeonScene->GetTorchPositions().size() << "\n";
+
+    for (int i = 0; i < (int)dungeonScene->GetTorchPositions().size(); i++) {
+        auto& p = dungeonScene->GetTorchPositions()[i];
+        std::cout << "Torch " << i << ": " << p.x << ", " << p.y << ", " << p.z << "\n";
+    }
+
+    for (auto& room : dungeon.Rooms) {
+        std::cout << "Room " << room.Index << " at x=" << room.X
+            << " z=" << room.Z << " w=" << room.Width
+            << " d=" << room.Depth << "\n";
+    }
 
     return true;
 }
