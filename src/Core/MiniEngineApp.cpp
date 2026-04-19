@@ -10,7 +10,7 @@ bool MiniEngineApp::Init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    m_Window = glfwCreateWindow(800, 600, "MiniEngine", nullptr, nullptr);
+    m_Window = glfwCreateWindow(1280, 720, "MiniEngine", nullptr, nullptr);
     if (!m_Window) {
         std::cerr << "Failed to create GLFW window!\n";
         glfwTerminate();
@@ -24,11 +24,11 @@ bool MiniEngineApp::Init() {
         return false;
     }
 
-    glViewport(0, 0, 900, 800);
+    glViewport(0, 0, 1280, 720);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    m_Camera = std::make_shared<Camera>(45.0f, 800.0f / 600.0f, 0.1f, 5000.0f);
+    m_Camera = std::make_shared<Camera>(45.0f, 1280.0f / 720.0f, 0.1f, 5000.0f);
 
     s_Instance = this;
     glfwSetCursorPosCallback(m_Window, MouseCallback);
@@ -47,15 +47,11 @@ bool MiniEngineApp::Init() {
     dungeonCfg.MinRoomDepth = 60.0f;
     dungeonCfg.MaxRoomDepth = 120.0f;
     dungeonCfg.RoomHeight = 50.0f;
-    dungeonCfg.CorridorWidth = 12.0f;
+    dungeonCfg.CellSize = 2.0f;
     dungeonCfg.NodePadding = 50.0f;
     dungeonCfg.MinRooms = 6;
     dungeonCfg.MaxRooms = 10;
     DungeonData dungeon = DungeonGenerator::Generate(dungeonCfg);
-
-    std::cout << "Generated " << dungeon.Rooms.size() << " rooms and "
-        << dungeon.Corridors.size() << " corridors\n";
-  
 
     // place camera in start room
     const RoomData& startRoom = dungeon.Rooms[dungeon.StartRoomIndex];
@@ -71,7 +67,6 @@ bool MiniEngineApp::Init() {
         << m_Camera->GetPosition().z << "\n";
 
     m_Light.Color = glm::vec3(0.02f, 0.02f, 0.05f);
-    //m_Light.Color = glm::vec3(0.5f, 0.5f, 0.5f);
     m_Light.Direction = glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f));
 
     auto wallMat = std::make_shared<Material>(
@@ -88,30 +83,25 @@ bool MiniEngineApp::Init() {
         std::make_unique<DungeonScene>(dungeon, wallMat, floorMat)
     );
 
-    // register all dungeon torches as point lights
-    auto* dungeonScene = static_cast<DungeonScene*>(m_SceneManager.GetCurrentScene());
-    for (auto& pos : dungeonScene->GetTorchPositions()) {
-        PointLight torch;
-        torch.Position = pos;
-        torch.Color = glm::vec3(1.0f, 0.4f, 0.05f);
-        torch.Radius = 35.0f;
-        torch.Intensity = 8.0f;
-        m_PointLights.push_back(torch);
+    // place torches — developer decision
+    auto* scene = m_SceneManager.GetCurrentScene();
+    float margin = 8.0f;
+    for (const auto& room : dungeon.Rooms) {
+        auto addTorch = [&](float x, float z) {
+            PointLight torch;
+            torch.Position = glm::vec3(x, 4.0f, z);
+            torch.Color = glm::vec3(1.0f, 0.4f, 0.05f);
+            torch.Radius = 35.0f;
+            torch.Intensity = 8.0f;
+            scene->AddPointLight(torch);
+            };
+        addTorch(room.X + margin, room.Z + margin);
+        addTorch(room.X + room.Width - margin, room.Z + margin);
+        addTorch(room.X + margin, room.Z + room.Depth - margin);
+        addTorch(room.X + room.Width - margin, room.Z + room.Depth - margin);
     }
 
-    std::cout << "Registered " << m_PointLights.size() << " torches\n";
-    std::cout << "Torch count: " << dungeonScene->GetTorchPositions().size() << "\n";
-
-    for (int i = 0; i < (int)dungeonScene->GetTorchPositions().size(); i++) {
-        auto& p = dungeonScene->GetTorchPositions()[i];
-        std::cout << "Torch " << i << ": " << p.x << ", " << p.y << ", " << p.z << "\n";
-    }
-
-    for (auto& room : dungeon.Rooms) {
-        std::cout << "Room " << room.Index << " at x=" << room.X
-            << " z=" << room.Z << " w=" << room.Width
-            << " d=" << room.Depth << "\n";
-    }
+    std::cout << "Registered " << scene->GetPointLights().size() << " torches\n";
 
     return true;
 }
@@ -154,8 +144,11 @@ void MiniEngineApp::Render() {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    RenderContext ctx{ *m_Camera, m_Light, m_PointLights };
-    m_SceneManager.Render(ctx);
+    auto* scene = m_SceneManager.GetCurrentScene();
+    if (scene) {
+        RenderContext ctx{ *m_Camera, m_Light, scene->GetPointLights() };
+        m_SceneManager.Render(ctx);
+    }
 }
 
 MiniEngineApp* MiniEngineApp::s_Instance = nullptr;

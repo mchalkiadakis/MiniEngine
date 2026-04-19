@@ -1,13 +1,20 @@
 #include "DungeonGenerator.h"
+#include "AStar.h"
 #include <random>
 #include <algorithm>
 #include <cmath>
 #include <climits>
 #include <cfloat>
+#include <iostream>
 
 DungeonData DungeonGenerator::Generate(const DungeonConfig& config) {
     std::mt19937 rng(config.Seed);
     DungeonData data;
+    data.RoomHeight = config.RoomHeight;
+
+    // create grid
+    data.Grid = std::make_shared<DungeonGrid>(
+        config.FloorWidth, config.FloorDepth, config.CellSize);
 
     std::vector<BSPNode> nodes;
     BSPNode root;
@@ -17,9 +24,9 @@ DungeonData DungeonGenerator::Generate(const DungeonConfig& config) {
     nodes.push_back(root);
 
     int minSize = static_cast<int>(std::max(config.MaxRoomWidth,
-        config.MaxRoomDepth) + config.NodePadding);
+        config.MaxRoomDepth)
+        + config.NodePadding);
 
-    // keep splitting until no more splits are possible
     bool splitHappened = true;
     while (splitHappened) {
         splitHappened = false;
@@ -35,7 +42,16 @@ DungeonData DungeonGenerator::Generate(const DungeonConfig& config) {
     }
 
     PlaceRooms(nodes, data, config, rng);
+
+    // mark rooms on grid
+    for (const auto& room : data.Rooms)
+        data.Grid->MarkRect(room.X, room.Z,
+            room.Width, room.Depth,
+            CellType::Floor);
+
+    // connect rooms using A*
     ConnectRooms(data, config);
+
     AssignRoomTypes(data, rng);
 
     return data;
@@ -47,7 +63,7 @@ void DungeonGenerator::Split(std::vector<BSPNode>& nodes, int idx,
     BSPNode& node = nodes[idx];
     if (node.Width < minSize * 2 && node.Depth < minSize * 2) return;
 
-    bool splitH; // true = horizontal split (divide along Z)
+    bool splitH;
     if (node.Width > node.Depth * 1.25f)      splitH = false;
     else if (node.Depth > node.Width * 1.25f) splitH = true;
     else {
@@ -85,14 +101,12 @@ void DungeonGenerator::PlaceRooms(std::vector<BSPNode>& nodes,
     for (auto& node : nodes) {
         if (!node.IsLeaf()) continue;
 
-        // skip if node is too small for minimum room size
         if (node.Width < cfg.MinRoomWidth + 4.0f ||
             node.Depth < cfg.MinRoomDepth + 4.0f) continue;
 
         float maxW = std::min(cfg.MaxRoomWidth, node.Width - 4.0f);
         float maxD = std::min(cfg.MaxRoomDepth, node.Depth - 4.0f);
 
-        // skip if max is smaller than min after clamping
         if (maxW < cfg.MinRoomWidth || maxD < cfg.MinRoomDepth) continue;
 
         std::uniform_real_distribution<float> rw(cfg.MinRoomWidth, maxW);
@@ -104,7 +118,6 @@ void DungeonGenerator::PlaceRooms(std::vector<BSPNode>& nodes,
         float rxMax = node.X + node.Width - rWidth - 2.0f;
         float rzMax = node.Z + node.Depth - rDepth - 2.0f;
 
-        // skip if placement range is invalid
         if (rxMax < node.X + 2.0f || rzMax < node.Z + 2.0f) continue;
 
         std::uniform_real_distribution<float> rx(node.X + 2.0f, rxMax);
@@ -125,137 +138,62 @@ void DungeonGenerator::PlaceRooms(std::vector<BSPNode>& nodes,
 
 void DungeonGenerator::ConnectRooms(DungeonData& data, const DungeonConfig& cfg)
 {
-    for (int i = 0; i < (int)data.Rooms.size(); i++) {
-        float minDist = FLT_MAX;
-        int   nearest = -1;
+    if (data.Rooms.size() < 2) return;
 
-        for (int j = 0; j < (int)data.Rooms.size(); j++) {
-            if (i == j) continue;
+    for (int i = 0; i < (int)data.Rooms.size() - 1; i++) {
+        glm::vec2 ci = data.Rooms[i].Center();
+        glm::vec2 cj = data.Rooms[i + 1].Center();
 
-            bool connected = false;
-            for (auto& d : data.Rooms[i].Doors)
-                if (d.ConnectsTo == j) { connected = true; break; }
-            if (connected) continue;
+        int startX = data.Grid->WorldToGridX(ci.x);
+        int startZ = data.Grid->WorldToGridZ(ci.y);
+        int endX = data.Grid->WorldToGridX(cj.x);
+        int endZ = data.Grid->WorldToGridZ(cj.y);
 
-            glm::vec2 ci = data.Rooms[i].Center();
-            glm::vec2 cj = data.Rooms[j].Center();
-            float dist = glm::length(cj - ci);
+        std::vector<glm::ivec2> path = AStar::FindPath(
+            *data.Grid, startX, startZ, endX, endZ);
 
-            if (dist < minDist) {
-                minDist = dist;
-                nearest = j;
-            }
+        if (path.empty()) {
+            std::cout << "Warning: no path found between room "
+                << i << " and " << i + 1 << "\n";
+            continue;
         }
 
-        if (nearest == -1) continue;
+        int hw = std::max(3, static_cast<int>(
+            cfg.CorridorWidth * 0.5f / cfg.CellSize));
 
-        RoomData& roomI = data.Rooms[i];
-        RoomData& roomJ = data.Rooms[nearest];
-
-        glm::vec2 ci = roomI.Center();
-        glm::vec2 cj = roomJ.Center();
-
-        // determine which wall faces the other room
-        auto GetWallSide = [](const glm::vec2& from, const glm::vec2& to) -> WallSide {
-            glm::vec2 d = to - from;
-            if (std::abs(d.x) > std::abs(d.y))
-                return d.x > 0 ? WallSide::East : WallSide::West;
-            else
-                return d.y > 0 ? WallSide::North : WallSide::South;
-            };
-
-        // get door position on wall given side and corridor center
-        auto GetDoorPosition = [&](const RoomData& room, WallSide side,
-            float corridorCenterX, float corridorCenterZ) -> glm::vec2 {
-                float hw = cfg.CorridorWidth * 0.5f;
-                switch (side) {
-                case WallSide::North:
-                    return glm::vec2(
-                        glm::clamp(corridorCenterX, room.X + hw, room.X + room.Width - hw),
-                        room.Z + room.Depth);
-                case WallSide::South:
-                    return glm::vec2(
-                        glm::clamp(corridorCenterX, room.X + hw, room.X + room.Width - hw),
-                        room.Z);
-                case WallSide::East:
-                    return glm::vec2(
-                        room.X + room.Width,
-                        glm::clamp(corridorCenterZ, room.Z + hw, room.Z + room.Depth - hw));
-                case WallSide::West:
-                    return glm::vec2(
-                        room.X,
-                        glm::clamp(corridorCenterZ, room.Z + hw, room.Z + room.Depth - hw));
-                default:
-                    return glm::vec2(0.0f);
+        auto carveWidth = [&](glm::ivec2 cell) {
+            for (int ddx = -hw; ddx <= hw; ddx++) {
+                for (int ddz = -hw; ddz <= hw; ddz++) {
+                    int nx = cell.x + ddx;
+                    int nz = cell.y + ddz;
+                    if (!data.Grid->InBounds(nx, nz)) continue;
+                    if (data.Grid->GetCell(nx, nz).Type == CellType::Wall)
+                        data.Grid->GetCell(nx, nz).Type = CellType::Corridor;
                 }
+            }
             };
 
-        WallSide sideI = GetWallSide(ci, cj);
-        WallSide sideJ = GetWallSide(cj, ci);
+        // carve full width along entire path
+        for (auto& cell : path)
+            carveWidth(cell);
 
-        float corridorCenterX = (ci.x + cj.x) * 0.5f;
-        float corridorCenterZ = (ci.y + cj.y) * 0.5f;
-
-        glm::vec2 doorPosI = GetDoorPosition(roomI, sideI, corridorCenterX, corridorCenterZ);
-        glm::vec2 doorPosJ = GetDoorPosition(roomJ, sideJ, corridorCenterX, corridorCenterZ);
-
-        // door for roomI
-        DoorData doorI;
-        doorI.ConnectsTo = nearest;
-        doorI.Position = doorPosI;
-        doorI.Side = sideI;
-        doorI.Width = cfg.CorridorWidth;
-        doorI.CenterAlong = (sideI == WallSide::East || sideI == WallSide::West)
-            ? (doorPosI.y - roomI.Z) / roomI.Depth
-            : (doorPosI.x - roomI.X) / roomI.Width;
-        roomI.Doors.push_back(doorI);
-
-        // door for roomJ
-        DoorData doorJ;
-        doorJ.ConnectsTo = i;
-        doorJ.Position = doorPosJ;
-        doorJ.Side = sideJ;
-        doorJ.Width = cfg.CorridorWidth;
-        doorJ.CenterAlong = (sideJ == WallSide::East || sideJ == WallSide::West)
-            ? (doorPosJ.y - roomJ.Z) / roomJ.Depth
-            : (doorPosJ.x - roomJ.X) / roomJ.Width;
-        roomJ.Doors.push_back(doorJ);
-
-        // L-shaped corridors
-        float hw = cfg.CorridorWidth * 0.5f;
-
-        CorridorData hCorridor;
-        hCorridor.RoomAIndex = i;
-        hCorridor.RoomBIndex = nearest;
-        hCorridor.X = std::min(ci.x, cj.x) - hw;
-        hCorridor.Z = ci.y - hw;
-        hCorridor.Width = std::abs(cj.x - ci.x) + cfg.CorridorWidth;
-        hCorridor.Depth = cfg.CorridorWidth;
-        hCorridor.Height = cfg.RoomHeight;
-        data.Corridors.push_back(hCorridor);
-
-        CorridorData vCorridor;
-        vCorridor.RoomAIndex = i;
-        vCorridor.RoomBIndex = nearest;
-        vCorridor.X = cj.x - hw;
-        vCorridor.Z = std::min(ci.y, cj.y) - hw;
-        vCorridor.Width = cfg.CorridorWidth;
-        vCorridor.Depth = std::abs(cj.y - ci.y) + cfg.CorridorWidth;
-        vCorridor.Height = cfg.RoomHeight;
-        data.Corridors.push_back(vCorridor);
+        // force extra width at start and end to guarantee
+        // connection with room walls
+        int endZone = std::min(8, (int)path.size());
+        for (int p = 0; p < endZone; p++)
+            carveWidth(path[p]);
+        for (int p = (int)path.size() - endZone; p < (int)path.size(); p++)
+            carveWidth(path[p]);
     }
 }
 
-void DungeonGenerator::AssignRoomTypes(DungeonData& data,
-    std::mt19937& rng)
+void DungeonGenerator::AssignRoomTypes(DungeonData& data, std::mt19937& rng)
 {
     if (data.Rooms.empty()) return;
 
-    // start room — first room
     data.Rooms[0].Type = RoomType::Start;
     data.StartRoomIndex = 0;
 
-    // boss room — furthest from start
     float maxDist = 0.0f;
     int   bossIdx = 0;
     for (int i = 1; i < (int)data.Rooms.size(); i++) {
@@ -266,7 +204,6 @@ void DungeonGenerator::AssignRoomTypes(DungeonData& data,
     data.Rooms[bossIdx].Type = RoomType::Boss;
     data.BossRoomIndex = bossIdx;
 
-    // randomly assign treasure rooms (~20% chance)
     std::uniform_real_distribution<float> chance(0.0f, 1.0f);
     for (int i = 1; i < (int)data.Rooms.size(); i++) {
         if (i == bossIdx) continue;

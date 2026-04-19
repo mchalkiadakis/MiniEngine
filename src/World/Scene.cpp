@@ -49,3 +49,11 @@ void Scene::Render(const RenderContext& ctx) const {
     for (auto& dc : drawCalls)
         dc.entity->Render(ctx);
 }
+
+void Scene::AddPointLight(const PointLight& light) {
+    m_PointLights.push_back(light);
+}
+
+const std::vector<PointLight>& Scene::GetPointLights() const {
+    return m_PointLights;
+}

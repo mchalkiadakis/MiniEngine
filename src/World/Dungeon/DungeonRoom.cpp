@@ -1,10 +1,12 @@
 #include "DungeonRoom.h"
 #include "DungeonMeshBuilder.h"
 
-DungeonRoom::DungeonRoom(const RoomData& data, std::shared_ptr<Material> material)
+DungeonRoom::DungeonRoom(const RoomData& data,
+    std::shared_ptr<Material> material,
+    const DungeonGrid& grid)
     : m_Data(data), m_Material(std::move(material))
 {
-    DungeonMeshBuilder::BuildRoom(m_Mesh, data);
+    DungeonMeshBuilder::BuildRoom(m_Mesh, data, grid);
 }
 
 void DungeonRoom::Render(const RenderContext& ctx) const {

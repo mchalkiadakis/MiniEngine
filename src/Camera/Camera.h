@@ -29,7 +29,7 @@ private:
     float m_Near;
     float m_Far;
 
-    float m_Speed = 200.5f;
+    float m_Speed = 100.5f;
     float m_MouseSensitivity = 0.1f;
     float m_Yaw = -90.0f;
     float m_Pitch = 0.0f;

@@ -1,5 +1,6 @@
 #pragma once
 #include "RoomData.h"
+#include "DungeonGrid.h"
 #include "Rendering/DynamicMesh.h"
 #include "Rendering/Material.h"
 #include "Rendering/RenderContext.h"
@@ -16,7 +17,9 @@ enum class RoomState {
 
 class DungeonRoom {
 public:
-    DungeonRoom(const RoomData& data, std::shared_ptr<Material> material);
+    DungeonRoom(const RoomData& data,
+        std::shared_ptr<Material> material,
+        const DungeonGrid& grid);
 
     void Render(const RenderContext& ctx) const;
 

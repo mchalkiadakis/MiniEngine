@@ -1,5 +1,6 @@
 #pragma once
 #include "RoomData.h"
+#include "DungeonGrid.h"
 #include <random>
 
 struct DungeonConfig {
@@ -12,10 +13,12 @@ struct DungeonConfig {
     float MinRoomDepth = 16.0f;
     float MaxRoomDepth = 40.0f;
     float RoomHeight = 8.0f;
-    float CorridorWidth = 6.0f;
-    float NodePadding = 40.0f; // extra space per BSP node beyond max room size
-    int   Seed = 42;
+    float CorridorWidth = 16.0f;
+    float NodePadding = 40.0f;
+    float CellSize = 2.0f;
+    int   Seed = 12;
 };
+
 class DungeonGenerator {
 public:
     DungeonGenerator() = delete;
@@ -27,8 +30,7 @@ private:
         int   RoomIndex = -1;
         int   Left = -1;
         int   Right = -1;
-
-        bool IsLeaf() const { return Left == -1 && Right == -1; }
+        bool  IsLeaf() const { return Left == -1 && Right == -1; }
     };
 
     static void Split(std::vector<BSPNode>& nodes, int nodeIndex,
@@ -37,7 +39,6 @@ private:
         DungeonData& data,
         const DungeonConfig& cfg,
         std::mt19937& rng);
-    static void ConnectRooms(DungeonData& data,
-        const DungeonConfig& cfg);
+    static void ConnectRooms(DungeonData& data, const DungeonConfig& cfg);
     static void AssignRoomTypes(DungeonData& data, std::mt19937& rng);
 };
