@@ -9,7 +9,6 @@ bool MiniEngineApp::Init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    FogSettings m_Fog;
 
     m_Window = glfwCreateWindow(1280, 720, "MiniEngine", nullptr, nullptr);
     if (!m_Window) {
@@ -52,6 +51,7 @@ bool MiniEngineApp::Init() {
     dungeonCfg.NodePadding = 50.0f;
     dungeonCfg.MinRooms = 6;
     dungeonCfg.MaxRooms = 10;
+	dungeonCfg.Seed = 424209;
     DungeonData dungeon = DungeonGenerator::Generate(dungeonCfg);
 
     // place camera in start room
@@ -67,7 +67,10 @@ bool MiniEngineApp::Init() {
         << m_Camera->GetPosition().y << ", "
         << m_Camera->GetPosition().z << "\n";
 
-    m_Light.Color = glm::vec3(0.02f, 0.02f, 0.05f);
+    //DIM
+    //m_Light.Color = glm::vec3(0.02f, 0.02f, 0.05f);
+    //BRIGHT
+    m_Light.Color = glm::vec3(0.3f, 0.3f, 0.3f);
     m_Light.Direction = glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f));
 
     auto wallMat = std::make_shared<Material>(
@@ -84,8 +87,9 @@ bool MiniEngineApp::Init() {
         std::make_unique<DungeonScene>(dungeon, wallMat, floorMat)
     );
 
-    // place torches — developer decision
     auto* scene = m_SceneManager.GetCurrentScene();
+
+    // place torches
     float margin = 8.0f;
     for (const auto& room : dungeon.Rooms) {
         auto addTorch = [&](float x, float z) {
@@ -102,8 +106,73 @@ bool MiniEngineApp::Init() {
         addTorch(room.X + room.Width - margin, room.Z + room.Depth - margin);
     }
 
+    m_Fog.Enabled = true;
+    m_Fog.Density = 0.003f;
+    m_Fog.Color = glm::vec3(0.15f, 0.15f, 0.15f);
 
     std::cout << "Registered " << scene->GetPointLights().size() << " torches\n";
+
+    // cube geometry
+    std::vector<Vertex> cubeVertices = {
+        { { -0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 0.0f } },
+        { {  0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 0.0f } },
+        { {  0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 1.0f } },
+        { { -0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 1.0f } },
+        { { -0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 0.0f, 0.0f } },
+        { {  0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 1.0f, 0.0f } },
+        { {  0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 1.0f, 1.0f } },
+        { { -0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 0.0f, 1.0f } },
+        { {  0.5f, -0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f }, { 0.0f, 0.0f } },
+        { {  0.5f, -0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f }, { 1.0f, 0.0f } },
+        { {  0.5f,  0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f }, { 1.0f, 1.0f } },
+        { {  0.5f,  0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f }, { 0.0f, 1.0f } },
+        { { -0.5f, -0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f }, { 0.0f, 0.0f } },
+        { { -0.5f, -0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f }, { 1.0f, 0.0f } },
+        { { -0.5f,  0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f }, { 1.0f, 1.0f } },
+        { { -0.5f,  0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f }, { 0.0f, 1.0f } },
+        { { -0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f }, { 0.0f, 0.0f } },
+        { {  0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f }, { 1.0f, 0.0f } },
+        { {  0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f }, { 1.0f, 1.0f } },
+        { { -0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f }, { 0.0f, 1.0f } },
+        { { -0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f }, { 0.0f, 0.0f } },
+        { {  0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f }, { 1.0f, 0.0f } },
+        { {  0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f }, { 1.0f, 1.0f } },
+        { { -0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f }, { 0.0f, 1.0f } },
+    };
+
+    std::vector<unsigned int> cubeIndices = {
+         0,  1,  2,   2,  3,  0,
+         4,  7,  6,   6,  5,  4,
+         8,  9, 10,  10, 11,  8,
+        12, 13, 14,  14, 15, 12,
+        16, 17, 18,  18, 19, 16,
+        20, 21, 22,  22, 23, 20,
+    };
+
+    // test entity with physics — spawned above camera position
+    auto& testBox = scene->CreateEntity("TestBox");
+    testBox.SetMesh(std::make_unique<Mesh>(cubeVertices, cubeIndices));
+    testBox.SetMaterial(std::make_unique<Material>(
+        basicShader,
+        assets.LoadTexture("Assets/Textures/Rock.jpg")
+    ));
+    testBox.AddComponent<TransformComponent>(
+        glm::vec3(startCenter.x, 3000.0f, startCenter.y + 3.0f),
+        glm::vec3(0.0f),
+        glm::vec3(3.0f)
+    );
+    testBox.AddComponent<PhysicsComponent>(true);
+
+    // create player
+    auto playerActor = std::make_unique<PlayerActor>("Player", 100.0f);
+    playerActor->GetTransform()->SetPosition(
+        glm::vec3(startCenter.x, 0.0f, startCenter.y));
+    m_Player = playerActor.get();
+    scene->AddActor(std::move(playerActor));
+
+    std::cout << "Player created at: "
+        << startCenter.x << ", 0, " << startCenter.y << "\n";
+
 
     return true;
 }
@@ -128,18 +197,38 @@ void MiniEngineApp::Run() {
 }
 
 void MiniEngineApp::PollInput(float deltaTime) {
-    bool w = glfwGetKey(m_Window, GLFW_KEY_W) == GLFW_PRESS;
-    bool s = glfwGetKey(m_Window, GLFW_KEY_S) == GLFW_PRESS;
-    bool a = glfwGetKey(m_Window, GLFW_KEY_A) == GLFW_PRESS;
-    bool d = glfwGetKey(m_Window, GLFW_KEY_D) == GLFW_PRESS;
-    bool q = glfwGetKey(m_Window, GLFW_KEY_Q) == GLFW_PRESS;
-    bool e = glfwGetKey(m_Window, GLFW_KEY_E) == GLFW_PRESS;
+    bool forward = glfwGetKey(m_Window, GLFW_KEY_W) == GLFW_PRESS;
+    bool backward = glfwGetKey(m_Window, GLFW_KEY_S) == GLFW_PRESS;
+    bool left = glfwGetKey(m_Window, GLFW_KEY_A) == GLFW_PRESS;
+    bool right = glfwGetKey(m_Window, GLFW_KEY_D) == GLFW_PRESS;
 
-    m_Camera->ProcessKeyboard(deltaTime, w, s, a, d, q, e);
+    if (m_Player) {
+        m_Player->ProcessInput(forward, backward, left, right, *m_Camera);
+    }
+    else {
+        // fallback — free camera if no player
+        bool down = glfwGetKey(m_Window, GLFW_KEY_Q) == GLFW_PRESS;
+        bool up = glfwGetKey(m_Window, GLFW_KEY_E) == GLFW_PRESS;
+        m_Camera->ProcessKeyboard(deltaTime, forward, backward, left, right, down, up);
+    }
+
+    // attack
+    if (glfwGetKey(m_Window, GLFW_KEY_SPACE) == GLFW_PRESS && m_Player)
+        m_Player->TriggerAttack();
 }
 
 void MiniEngineApp::Update(float deltaTime) {
     m_SceneManager.Update(deltaTime, *m_Camera);
+
+    // sync camera to player position
+    if (m_Player) {
+        auto* transform = m_Player->GetTransform();
+        if (transform) {
+            glm::vec3 playerPos = transform->GetPosition();
+            // camera at eye height above player feet
+            m_Camera->SetPosition(playerPos + glm::vec3(0.0f, 1.8f, 0.0f));
+        }
+    }
 
     auto* scene = m_SceneManager.GetCurrentScene();
     if (scene) {
@@ -156,6 +245,7 @@ void MiniEngineApp::Render() {
     auto* scene = m_SceneManager.GetCurrentScene();
     if (scene) {
         RenderContext ctx{ *m_Camera, m_Light, scene->GetPointLights(), m_Fog };
+        //RenderContext ctx{ *m_Camera, m_Light, scene->GetPointLights(), 0 };
         m_SceneManager.Render(ctx);
     }
 }

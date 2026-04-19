@@ -1,5 +1,6 @@
 #include "Entity.h"
 #include "Rendering/Model.h"
+#include "Core/Components/TransformComponent.h"
 
 Entity::Entity(const std::string& name) : m_Name(name) {}
 
@@ -12,11 +13,17 @@ void Entity::SetMaterial(std::unique_ptr<Material> material) {
 }
 
 void Entity::Update(float deltaTime) {
-    glm::mat4 translation = glm::translate(glm::mat4(1.0f), m_Position);
+    // update components first
+    for (auto& [type, component] : m_Components)
+        component->Update(deltaTime);
 
+    // existing transform logic
+    glm::mat4 translation = glm::translate(glm::mat4(1.0f), m_Position);
     if (m_ShouldRotate) {
         m_RotationAngle += deltaTime;
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), m_RotationAngle, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f),
+            m_RotationAngle,
+            glm::vec3(0.0f, 1.0f, 0.0f));
         m_ModelMatrix = translation * rotation;
     }
     else {
@@ -30,16 +37,21 @@ void Entity::SetModel(std::unique_ptr<Model> model) {
 
 //expensive
 void Entity::Render(const RenderContext& ctx) {
+    glm::mat4 matrix = m_ModelMatrix;
+
+    auto* transform = GetComponent<TransformComponent>();
+    if (transform)
+        matrix = transform->GetMatrix();
+
     if (m_Model) {
-        m_Model->Draw(ctx, m_ModelMatrix);
+        m_Model->Draw(ctx, matrix);
         return;
     }
 
     if (!m_Material || !m_Mesh) return;
-
     auto shader = m_Material->GetShader();
     m_Material->Bind();
-    ctx.ApplyToShader(*shader, m_ModelMatrix);
+    ctx.ApplyToShader(*shader, matrix);
     m_Mesh->Draw();
 }
 

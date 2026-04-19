@@ -12,20 +12,29 @@ DungeonData DungeonGenerator::Generate(const DungeonConfig& config) {
     DungeonData data;
     data.RoomHeight = config.RoomHeight;
 
-    // create grid
+    // sanitize config to prevent invalid distributions
+    float safeMinRoomW = std::max(config.MinRoomWidth, 4.0f);
+    float safeMinRoomD = std::max(config.MinRoomDepth, 4.0f);
+    float safeMaxRoomW = std::max(config.MaxRoomWidth, safeMinRoomW + 1.0f);
+    float safeMaxRoomD = std::max(config.MaxRoomDepth, safeMinRoomD + 1.0f);
+    float safePadding = std::max(config.NodePadding, 10.0f);
+
+    int minSize = static_cast<int>(
+        std::max(safeMaxRoomW, safeMaxRoomD) + safePadding);
+
+    // ensure floor is large enough for at least 2 splits
+    float safeFloorW = std::max(config.FloorWidth, minSize * 2.0f + 10.0f);
+    float safeFloorD = std::max(config.FloorDepth, minSize * 2.0f + 10.0f);
+
     data.Grid = std::make_shared<DungeonGrid>(
-        config.FloorWidth, config.FloorDepth, config.CellSize);
+        safeFloorW, safeFloorD, config.CellSize);
 
     std::vector<BSPNode> nodes;
     BSPNode root;
     root.X = 0; root.Z = 0;
-    root.Width = config.FloorWidth;
-    root.Depth = config.FloorDepth;
+    root.Width = safeFloorW;
+    root.Depth = safeFloorD;
     nodes.push_back(root);
-
-    int minSize = static_cast<int>(std::max(config.MaxRoomWidth,
-        config.MaxRoomDepth)
-        + config.NodePadding);
 
     bool splitHappened = true;
     while (splitHappened) {
@@ -43,15 +52,12 @@ DungeonData DungeonGenerator::Generate(const DungeonConfig& config) {
 
     PlaceRooms(nodes, data, config, rng);
 
-    // mark rooms on grid
     for (const auto& room : data.Rooms)
         data.Grid->MarkRect(room.X, room.Z,
             room.Width, room.Depth,
             CellType::Floor);
 
-    // connect rooms using A*
     ConnectRooms(data, config);
-
     AssignRoomTypes(data, rng);
 
     return data;

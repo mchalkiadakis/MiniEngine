@@ -1,4 +1,5 @@
-﻿#pragma once
+﻿
+#pragma once
 #define GLM_ENABLE_EXPERIMENTAL
 
 #include <glad/glad.h>
@@ -19,6 +20,7 @@
 #include "Camera/Camera.h"
 #include "Rendering/Light.h"
 #include "Rendering/RenderContext.h"
+#include "Rendering/PointLight.h"
 #include "Shader.h"
 #include "Mesh.h"
 #include "Texture.h"
@@ -34,3 +36,9 @@
 #include "World/Skybox.h"
 #include "Core/AssetManager.h"
 #include "Core/MiniEngineApp.h"
+#include "Core/Component.h"
+#include "Core/Components/TransformComponent.h"
+#include "Core/Components/PhysicsComponent.h"
+#include "Effects/FogSettings.h"
+#include "World/Dungeon/DungeonGrid.h"
+#include "World/Dungeon/AStar.h"

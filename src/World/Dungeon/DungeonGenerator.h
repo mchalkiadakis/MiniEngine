@@ -16,7 +16,7 @@ struct DungeonConfig {
     float CorridorWidth = 16.0f;
     float NodePadding = 40.0f;
     float CellSize = 2.0f;
-    int   Seed = 12;
+    int   Seed = 144442;
 };
 
 class DungeonGenerator {

@@ -26,11 +26,12 @@ DungeonScene::DungeonScene(const DungeonData& data,
 }
 
 void DungeonScene::Update(float deltaTime, const Camera& camera) {
-    for (auto& entity : m_Entities)
-        entity->Update(deltaTime);
+    Scene::Update(deltaTime, camera); // call parent — updates entities
 }
 
 void DungeonScene::Render(const RenderContext& ctx) const {
+    Scene::Render(ctx); // call parent — renders entities
+
     for (const auto& room : m_Rooms)
         room.Render(ctx);
 
@@ -40,30 +41,8 @@ void DungeonScene::Render(const RenderContext& ctx) const {
         ctx.ApplyToShader(*shader, glm::mat4(1.0f));
         m_CorridorMesh.Draw();
     }
-
-    for (const auto& entity : m_Entities)
-        entity->Render(ctx);
 }
 
-void DungeonScene::AddPointLight(const PointLight& light) {
-    m_PointLights.push_back(light);
-}
-
-const std::vector<PointLight>& DungeonScene::GetPointLights() const {
-    return m_PointLights;
-}
-
-Entity& DungeonScene::CreateEntity(const std::string& name) {
-    m_Entities.push_back(std::make_unique<Entity>(name));
-    return *m_Entities.back();
-}
-
-Entity* DungeonScene::GetEntity(const std::string& name) {
-    for (auto& entity : m_Entities)
-        if (entity->GetName() == name)
-            return entity.get();
-    return nullptr;
-}
 void DungeonScene::RequestTransition(std::unique_ptr<IScene> nextScene) {
     m_NextScene = std::move(nextScene);
 }

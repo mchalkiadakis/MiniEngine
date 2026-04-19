@@ -63,3 +63,10 @@ Entity* Scene::GetEntity(const std::string& name) {
             return entity.get();
     return nullptr;
 }
+Actor& Scene::CreateActor(const std::string& name, float maxHealth) {
+    m_Entities.push_back(std::make_unique<Actor>(name, maxHealth));
+    return static_cast<Actor&>(*m_Entities.back());
+}
+void Scene::AddActor(std::unique_ptr<Actor> actor) {
+    m_Entities.push_back(std::unique_ptr<Entity>(actor.release()));
+}

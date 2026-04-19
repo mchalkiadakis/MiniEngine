@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "IScene.h"
+#include "Actor.h"
 #include "ChunkManager.h"
 #include "Skybox.h"
 #include "Rendering/Light.h"
@@ -14,6 +15,8 @@ class Scene : public IScene {
 public:
     Entity& CreateEntity(const std::string& name) override;
     Entity* GetEntity(const std::string& name) override;
+    Actor& CreateActor(const std::string& name, float maxHealth = 100.0f) override;
+    void    AddActor(std::unique_ptr<Actor> actor) override;
     void    SetChunkManager(std::unique_ptr<ChunkManager> chunkManager);
     void    SetSkybox(std::unique_ptr<Skybox> skybox);
     void    Update(float deltaTime, const Camera& camera) override;

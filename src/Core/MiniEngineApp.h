@@ -2,12 +2,12 @@
 #include "MiniEngine.h"
 #include "Core/SceneManager.h"
 #include "Effects/FogSettings.h"
+#include "World/PlayerActor.h"
 
 class MiniEngineApp {
 public:
     bool Init();
     void Run();
-
     static void MouseCallback(GLFWwindow* window, double xpos, double ypos);
 
 private:
@@ -20,6 +20,7 @@ private:
     SceneManager            m_SceneManager;
     DirectionalLight        m_Light;
     FogSettings             m_Fog;
+    PlayerActor* m_Player = nullptr; // non-owning pointer
 
     static MiniEngineApp* s_Instance;
     float                   m_LastMouseX = 400.0f;
