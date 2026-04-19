@@ -107,7 +107,7 @@ bool MiniEngineApp::Init() {
     }
 
     m_Fog.Enabled = true;
-    m_Fog.Density = 0.003f;
+    m_Fog.Density = 0.009f;
     m_Fog.Color = glm::vec3(0.15f, 0.15f, 0.15f);
 
     std::cout << "Registered " << scene->GetPointLights().size() << " torches\n";
@@ -202,30 +202,35 @@ void MiniEngineApp::PollInput(float deltaTime) {
     bool left = glfwGetKey(m_Window, GLFW_KEY_A) == GLFW_PRESS;
     bool right = glfwGetKey(m_Window, GLFW_KEY_D) == GLFW_PRESS;
 
-    if (m_Player) {
-        m_Player->ProcessInput(forward, backward, left, right, *m_Camera);
+    // F key — toggle free roam / player mode
+    if (glfwGetKey(m_Window, GLFW_KEY_F) == GLFW_PRESS && !m_FKeyPressed) {
+        m_FKeyPressed = true;
+        m_FreeRoam = !m_FreeRoam;
+        std::cout << (m_FreeRoam ? "Free roam ON\n" : "Free roam OFF\n");
     }
-    else {
-        // fallback — free camera if no player
+    if (glfwGetKey(m_Window, GLFW_KEY_F) == GLFW_RELEASE)
+        m_FKeyPressed = false;
+
+    if (m_FreeRoam || !m_Player) {
         bool down = glfwGetKey(m_Window, GLFW_KEY_Q) == GLFW_PRESS;
         bool up = glfwGetKey(m_Window, GLFW_KEY_E) == GLFW_PRESS;
         m_Camera->ProcessKeyboard(deltaTime, forward, backward, left, right, down, up);
     }
+    else {
+        m_Player->ProcessInput(forward, backward, left, right, *m_Camera);
 
-    // attack
-    if (glfwGetKey(m_Window, GLFW_KEY_SPACE) == GLFW_PRESS && m_Player)
-        m_Player->TriggerAttack();
+        if (glfwGetKey(m_Window, GLFW_KEY_SPACE) == GLFW_PRESS)
+            m_Player->TriggerAttack();
+    }
 }
 
 void MiniEngineApp::Update(float deltaTime) {
     m_SceneManager.Update(deltaTime, *m_Camera);
 
-    // sync camera to player position
-    if (m_Player) {
+    if (m_Player && !m_FreeRoam) {
         auto* transform = m_Player->GetTransform();
         if (transform) {
             glm::vec3 playerPos = transform->GetPosition();
-            // camera at eye height above player feet
             m_Camera->SetPosition(playerPos + glm::vec3(0.0f, 1.8f, 0.0f));
         }
     }

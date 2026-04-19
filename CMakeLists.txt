@@ -11,7 +11,7 @@ set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
 
 add_subdirectory(external/glfw)
-add_subdirectory(external/assimp)   # ← was missing
+add_subdirectory(external/assimp)
 
 include_directories(
     external/glad/include

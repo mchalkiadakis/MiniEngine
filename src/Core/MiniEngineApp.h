@@ -26,4 +26,6 @@ private:
     float                   m_LastMouseX = 400.0f;
     float                   m_LastMouseY = 300.0f;
     bool                    m_FirstMouse = true;
+    bool m_FreeRoam = false;
+    bool m_FKeyPressed = false;
 };
