@@ -12,13 +12,14 @@ class Entity;
 
 class Scene : public IScene {
 public:
-    Entity& CreateEntity(const std::string& name);
-    void SetChunkManager(std::unique_ptr<ChunkManager> chunkManager);
-    void SetSkybox(std::unique_ptr<Skybox> skybox);
-    void Update(float deltaTime, const Camera& camera) override;
-    void Render(const RenderContext& ctx) const override;
-    void AddPointLight(const PointLight& light) override;
-    const std::vector<PointLight>& GetPointLights() const override;
+    Entity& CreateEntity(const std::string& name) override;
+    Entity* GetEntity(const std::string& name) override;
+    void    SetChunkManager(std::unique_ptr<ChunkManager> chunkManager);
+    void    SetSkybox(std::unique_ptr<Skybox> skybox);
+    void    Update(float deltaTime, const Camera& camera) override;
+    void    Render(const RenderContext& ctx) const override;
+    void    AddPointLight(const PointLight& light) override;
+    const   std::vector<PointLight>& GetPointLights() const override;
 
 private:
     std::vector<std::unique_ptr<Entity>> m_Entities;

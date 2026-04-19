@@ -140,6 +140,13 @@ void MiniEngineApp::PollInput(float deltaTime) {
 
 void MiniEngineApp::Update(float deltaTime) {
     m_SceneManager.Update(deltaTime, *m_Camera);
+
+    auto* scene = m_SceneManager.GetCurrentScene();
+    if (scene) {
+        auto next = scene->GetNextScene();
+        if (next)
+            m_SceneManager.LoadScene(std::move(next));
+    }
 }
 
 void MiniEngineApp::Render() {

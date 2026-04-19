@@ -1,5 +1,12 @@
 #pragma once
-#include "MiniEngine.h"
+#include <string>
+#include <memory>
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include "Rendering/Mesh.h"
+#include "Rendering/Material.h"
+#include "Rendering/Model.h"
+#include "Rendering/RenderContext.h"
 
 class Entity {
 public:
@@ -13,18 +20,22 @@ public:
     void SetTransform(const glm::mat4& transform);
     void SetPosition(const glm::vec3& pos) { m_Position = pos; }
     void EnableRotation(bool rotate) { m_ShouldRotate = rotate; }
+
+    const std::string& GetName() const { return m_Name; }
+    glm::vec3          GetPosition() const { return m_Position; }
+
     unsigned int GetShaderID() const {
         return m_Material ? m_Material->GetShader()->GetID() : 0;
     }
+
 private:
-    bool m_ManualTransform = false;
-    std::string m_Name;
-    std::unique_ptr<Mesh> m_Mesh;
+    bool              m_ManualTransform = false;
+    std::string       m_Name;
+    std::unique_ptr<Mesh>     m_Mesh;
     std::unique_ptr<Material> m_Material;
-    std::unique_ptr<Model> m_Model;
-    glm::mat4 m_ModelMatrix = glm::mat4(1.0f);
-    float m_RotationAngle = 0.0f;
-    bool m_ShouldRotate = false;
-    
-    glm::vec3 m_Position = glm::vec3(0.0f);
+    std::unique_ptr<Model>    m_Model;
+    glm::mat4         m_ModelMatrix = glm::mat4(1.0f);
+    float             m_RotationAngle = 0.0f;
+    bool              m_ShouldRotate = false;
+    glm::vec3         m_Position = glm::vec3(0.0f);
 };

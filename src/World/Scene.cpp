@@ -57,3 +57,9 @@ void Scene::AddPointLight(const PointLight& light) {
 const std::vector<PointLight>& Scene::GetPointLights() const {
     return m_PointLights;
 }
+Entity* Scene::GetEntity(const std::string& name) {
+    for (auto& entity : m_Entities)
+        if (entity->GetName() == name)
+            return entity.get();
+    return nullptr;
+}
