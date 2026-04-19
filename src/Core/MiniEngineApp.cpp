@@ -9,6 +9,7 @@ bool MiniEngineApp::Init() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    FogSettings m_Fog;
 
     m_Window = glfwCreateWindow(1280, 720, "MiniEngine", nullptr, nullptr);
     if (!m_Window) {
@@ -101,6 +102,7 @@ bool MiniEngineApp::Init() {
         addTorch(room.X + room.Width - margin, room.Z + room.Depth - margin);
     }
 
+
     std::cout << "Registered " << scene->GetPointLights().size() << " torches\n";
 
     return true;
@@ -146,7 +148,7 @@ void MiniEngineApp::Render() {
 
     auto* scene = m_SceneManager.GetCurrentScene();
     if (scene) {
-        RenderContext ctx{ *m_Camera, m_Light, scene->GetPointLights() };
+        RenderContext ctx{ *m_Camera, m_Light, scene->GetPointLights(), m_Fog };
         m_SceneManager.Render(ctx);
     }
 }

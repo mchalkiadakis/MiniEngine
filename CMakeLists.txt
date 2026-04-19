@@ -26,6 +26,7 @@ include_directories(
     src/World
     src/Engine
     src/Camera
+    src/Effects
 )
 
 file(COPY Assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
@@ -40,6 +41,6 @@ file(GLOB_RECURSE SOURCES
     external/glad/src/glad.c
 )
 
-add_executable(MiniEngine ${SOURCES} "src/World/Scene.h" "src/World/Entity.cpp" "src/World/Entity.h" "src/World/Scene.cpp" "src/Rendering/Model.cpp" "src/Rendering/Model.h" "src/Rendering/ModelLoader.cpp" "src/Rendering/ModelLoader.h" "src/Rendering/Light.h" "src/Rendering/DynamicMesh.cpp" "src/Rendering/DynamicMesh.h" "src/World/TerrainGenerator.cpp" "src/World/TerrainGenerator.h" "src/World/Terrain.cpp" "src/Rendering/CubemapTexture.h" "src/Rendering/CubemapTexture.cpp" "src/World/Skybox.h" "src/World/Skybox.cpp" "src/World/TerrainChunk.h" "src/World/ChunkManager.h" "src/Core/AssetManager.h" "src/Rendering/PointLight.h" "src/Rendering/RenderContext.h" "src/World/Dungeon/RoomData.h" "src/World/Dungeon/DungeonGenerator.h" "src/World/Dungeon/DungeonGenerator.cpp" "src/Core/SceneManager.h" "src/Core/SceneManager.cpp" "src/World/Dungeon/DungeonRoom.h" "src/World/Dungeon/DungeonRoom.cpp" "src/World/Dungeon/DungeonMeshBuilder.h" "src/World/Dungeon/DungeonMeshBuilder.cpp" "src/World/IScene.h" "src/World/Dungeon/DungeonScene.h" "src/World/Dungeon/DungeonScene.cpp" "src/World/Dungeon/DungeonGrid.h" "src/World/Dungeon/DungeonGrid.cpp" "src/World/Dungeon/AStar.h" "src/World/Dungeon/AStar.cpp")
+add_executable(MiniEngine ${SOURCES} "src/World/Scene.h" "src/World/Entity.cpp" "src/World/Entity.h" "src/World/Scene.cpp" "src/Rendering/Model.cpp" "src/Rendering/Model.h" "src/Rendering/ModelLoader.cpp" "src/Rendering/ModelLoader.h" "src/Rendering/Light.h" "src/Rendering/DynamicMesh.cpp" "src/Rendering/DynamicMesh.h" "src/World/TerrainGenerator.cpp" "src/World/TerrainGenerator.h" "src/World/Terrain.cpp" "src/Rendering/CubemapTexture.h" "src/Rendering/CubemapTexture.cpp" "src/World/Skybox.h" "src/World/Skybox.cpp" "src/World/TerrainChunk.h" "src/World/ChunkManager.h" "src/Core/AssetManager.h" "src/Rendering/PointLight.h" "src/Rendering/RenderContext.h" "src/World/Dungeon/RoomData.h" "src/World/Dungeon/DungeonGenerator.h" "src/World/Dungeon/DungeonGenerator.cpp" "src/Core/SceneManager.h" "src/Core/SceneManager.cpp" "src/World/Dungeon/DungeonRoom.h" "src/World/Dungeon/DungeonRoom.cpp" "src/World/Dungeon/DungeonMeshBuilder.h" "src/World/Dungeon/DungeonMeshBuilder.cpp" "src/World/IScene.h" "src/World/Dungeon/DungeonScene.h" "src/World/Dungeon/DungeonScene.cpp" "src/World/Dungeon/DungeonGrid.h" "src/World/Dungeon/DungeonGrid.cpp" "src/World/Dungeon/AStar.h" "src/World/Dungeon/AStar.cpp" "src/Effects/FogSettings.h" "src/Effects/FogSettings.cpp")
 
 target_link_libraries(MiniEngine glfw opengl32 assimp)

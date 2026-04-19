@@ -1,6 +1,7 @@
 #pragma once
 #include "MiniEngine.h"
 #include "Core/SceneManager.h"
+#include "Effects/FogSettings.h"
 
 class MiniEngineApp {
 public:
@@ -18,6 +19,7 @@ private:
     std::shared_ptr<Camera> m_Camera;
     SceneManager            m_SceneManager;
     DirectionalLight        m_Light;
+    FogSettings             m_Fog;
 
     static MiniEngineApp* s_Instance;
     float                   m_LastMouseX = 400.0f;

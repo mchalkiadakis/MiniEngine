@@ -11,6 +11,11 @@ uniform vec3 u_LightDir;
 uniform vec3 u_LightColor;
 uniform vec3 u_ViewPos;
 
+// fog
+uniform vec3  u_FogColor;
+uniform float u_FogDensity;
+uniform int   u_FogEnabled;
+
 #define MAX_POINT_LIGHTS 128
 
 struct PointLight {
@@ -24,21 +29,20 @@ uniform PointLight u_PointLights[MAX_POINT_LIGHTS];
 uniform int        u_NumPointLights;
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
-    vec3 lightDir = normalize(light.position - fragPos);
-    float distance = length(light.position - fragPos);
+    vec3  lightDir    = normalize(light.position - fragPos);
+    float distance    = length(light.position - fragPos);
 
     float attenuation = clamp(1.0 - (distance / light.radius), 0.0, 1.0);
-    attenuation = pow(attenuation, 3.0);
+    attenuation       = pow(attenuation, 3.0);
 
-    // small ambient so no face is completely black
-    vec3 ambient = 0.2 * u_LightColor;
+    vec3  ambient     = 0.1 * light.color * light.intensity * attenuation;
 
-    float diff = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = diff * light.color * light.intensity * attenuation;
+    float diff        = max(dot(normal, lightDir), 0.0);
+    vec3  diffuse     = diff * light.color * light.intensity * attenuation;
 
-    vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
-    vec3 specular = spec * light.color * light.intensity * attenuation * 0.3;
+    vec3  halfwayDir  = normalize(lightDir + viewDir);
+    float spec        = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
+    vec3  specular    = spec * light.color * light.intensity * attenuation * 0.3;
 
     return ambient + diffuse + specular;
 }
@@ -49,7 +53,7 @@ void main() {
     vec3 viewDir  = normalize(u_ViewPos - v_FragPos);
 
     // ambient
-    vec3 ambient = 0.01 * u_LightColor;
+    vec3 ambient  = 0.01 * u_LightColor;
 
     // directional light
     vec3 lightDir = normalize(u_LightDir);
@@ -63,8 +67,15 @@ void main() {
     vec3 result = (ambient + diffuse + specular) * texColor;
 
     // point lights
-    for (int i = 0; i < u_NumPointLights; i++) {
+    for (int i = 0; i < u_NumPointLights; i++)
         result += CalcPointLight(u_PointLights[i], norm, v_FragPos, viewDir) * texColor;
+
+    // fog
+    if (u_FogEnabled == 1) {
+        float distance  = length(u_ViewPos - v_FragPos);
+        float fogFactor = exp(-u_FogDensity * distance);
+        fogFactor       = clamp(fogFactor, 0.0, 1.0);
+        result          = mix(u_FogColor, result, fogFactor);
     }
 
     FragColor = vec4(result, 1.0);
