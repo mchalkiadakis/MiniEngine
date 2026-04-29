@@ -19,6 +19,8 @@ public:
 
     void Update(float deltaTime, const Camera& camera) override;
     void Render(const RenderContext& ctx) const override;
+    void RenderDepth(Shader& depthShader,
+        const glm::mat4& lightSpaceMatrix) const override;
     void RequestTransition(std::unique_ptr<IScene> nextScene);
     std::unique_ptr<IScene> GetNextScene() override;
 

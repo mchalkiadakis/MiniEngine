@@ -21,11 +21,15 @@ public:
     void    SetSkybox(std::unique_ptr<Skybox> skybox);
     void    Update(float deltaTime, const Camera& camera) override;
     void    Render(const RenderContext& ctx) const override;
+    void    RenderDepth(Shader& depthShader,
+        const glm::mat4& lightSpaceMatrix) const override;
     void    AddPointLight(const PointLight& light) override;
     const   std::vector<PointLight>& GetPointLights() const override;
 
-private:
+protected:
     std::vector<std::unique_ptr<Entity>> m_Entities;
+
+private:
     std::unique_ptr<ChunkManager>        m_ChunkManager;
     std::unique_ptr<Skybox>              m_Skybox;
     std::vector<PointLight>              m_PointLights;

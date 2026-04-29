@@ -13,11 +13,9 @@ void Entity::SetMaterial(std::unique_ptr<Material> material) {
 }
 
 void Entity::Update(float deltaTime) {
-    // update components first
     for (auto& [type, component] : m_Components)
         component->Update(deltaTime);
 
-    // existing transform logic
     glm::mat4 translation = glm::translate(glm::mat4(1.0f), m_Position);
     if (m_ShouldRotate) {
         m_RotationAngle += deltaTime;
@@ -35,7 +33,6 @@ void Entity::SetModel(std::unique_ptr<Model> model) {
     m_Model = std::move(model);
 }
 
-//expensive
 void Entity::Render(const RenderContext& ctx) {
     glm::mat4 matrix = m_ModelMatrix;
 
@@ -58,4 +55,22 @@ void Entity::Render(const RenderContext& ctx) {
 void Entity::SetTransform(const glm::mat4& transform) {
     m_ModelMatrix = transform;
     m_ManualTransform = true;
+}
+
+void Entity::DrawGeometry() const {
+    glm::mat4 matrix = m_ModelMatrix;
+
+    auto* transform = const_cast<Entity*>(this)->GetComponent<TransformComponent>();
+    if (transform)
+        matrix = transform->GetMatrix();
+
+    // Model path — draw each mesh's VAO directly
+    if (m_Model) {
+        m_Model->DrawGeometry();
+        return;
+    }
+
+    // Mesh path
+    if (!m_Mesh) return;
+    m_Mesh->Draw();
 }

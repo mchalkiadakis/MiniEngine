@@ -15,6 +15,7 @@ public:
         std::shared_ptr<Material> material, const FastNoiseLite& noise);
 
     void Render(const RenderContext& ctx) const;
+    void RenderDepth(class Shader& depthShader, const glm::mat4& lightSpaceMatrix) const;
 
     int GetChunkX() const { return m_ChunkX; }
     int GetChunkZ() const { return m_ChunkZ; }

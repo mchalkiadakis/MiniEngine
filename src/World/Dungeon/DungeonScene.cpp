@@ -26,11 +26,11 @@ DungeonScene::DungeonScene(const DungeonData& data,
 }
 
 void DungeonScene::Update(float deltaTime, const Camera& camera) {
-    Scene::Update(deltaTime, camera); // call parent — updates entities
+    Scene::Update(deltaTime, camera);
 }
 
 void DungeonScene::Render(const RenderContext& ctx) const {
-    Scene::Render(ctx); // call parent — renders entities
+    Scene::Render(ctx);
 
     for (const auto& room : m_Rooms)
         room.Render(ctx);
@@ -41,6 +41,26 @@ void DungeonScene::Render(const RenderContext& ctx) const {
         ctx.ApplyToShader(*shader, glm::mat4(1.0f));
         m_CorridorMesh.Draw();
     }
+}
+
+void DungeonScene::RenderDepth(Shader& depthShader,
+    const glm::mat4& lightSpaceMatrix) const {
+    // render entities (test box, player, etc.)
+    Scene::RenderDepth(depthShader, lightSpaceMatrix);
+
+    depthShader.Use();
+    depthShader.SetUniformMat4("u_LightSpaceMatrix",
+        glm::value_ptr(lightSpaceMatrix));
+
+    glm::mat4 identity(1.0f);
+    depthShader.SetUniformMat4("u_Model", glm::value_ptr(identity));
+
+    // render all room meshes
+    for (const auto& room : m_Rooms)
+        room.DrawGeometry();
+
+    // render corridor mesh
+    m_CorridorMesh.Draw();
 }
 
 void DungeonScene::RequestTransition(std::unique_ptr<IScene> nextScene) {

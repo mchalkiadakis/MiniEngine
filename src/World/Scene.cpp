@@ -1,6 +1,9 @@
 #include "Scene.h"
 #include "Entity.h"
+#include "Core/Components/TransformComponent.h"
 #include <algorithm>
+#include <gtc/type_ptr.hpp>
+#include <iostream>
 
 Entity& Scene::CreateEntity(const std::string& name) {
     m_Entities.push_back(std::make_unique<Entity>(name));
@@ -50,6 +53,29 @@ void Scene::Render(const RenderContext& ctx) const {
         dc.entity->Render(ctx);
 }
 
+void Scene::RenderDepth(Shader& depthShader,
+    const glm::mat4& lightSpaceMatrix) const {
+    depthShader.Use();
+    depthShader.SetUniformMat4("u_LightSpaceMatrix",
+        glm::value_ptr(lightSpaceMatrix));
+
+    for (auto& entity : m_Entities) {
+        auto* transform = const_cast<Entity*>(entity.get())
+            ->GetComponent<TransformComponent>();
+
+        glm::mat4 model = transform
+            ? transform->GetMatrix()
+            : entity->GetModelMatrix();
+
+        depthShader.SetUniformMat4("u_Model", glm::value_ptr(model));
+       // glm::vec3 translation(model[3]);
+       // std::cout << "  model pos: " << translation.x << " "
+         //   << translation.y << " " << translation.z << "\n";
+        entity->DrawGeometry();
+        //std::cout << "Depth pass: " << entity->GetName() << "\n";
+    }
+}
+
 void Scene::AddPointLight(const PointLight& light) {
     m_PointLights.push_back(light);
 }
@@ -57,16 +83,19 @@ void Scene::AddPointLight(const PointLight& light) {
 const std::vector<PointLight>& Scene::GetPointLights() const {
     return m_PointLights;
 }
+
 Entity* Scene::GetEntity(const std::string& name) {
     for (auto& entity : m_Entities)
         if (entity->GetName() == name)
             return entity.get();
     return nullptr;
 }
+
 Actor& Scene::CreateActor(const std::string& name, float maxHealth) {
     m_Entities.push_back(std::make_unique<Actor>(name, maxHealth));
     return static_cast<Actor&>(*m_Entities.back());
 }
+
 void Scene::AddActor(std::unique_ptr<Actor> actor) {
     m_Entities.push_back(std::unique_ptr<Entity>(actor.release()));
 }

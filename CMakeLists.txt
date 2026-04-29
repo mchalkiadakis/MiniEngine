@@ -29,7 +29,6 @@ include_directories(
     src/Effects
 )
 
-file(COPY Assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 file(GLOB_RECURSE SOURCES
     src/Core/*.cpp
@@ -41,6 +40,15 @@ file(GLOB_RECURSE SOURCES
     external/glad/src/glad.c
 )
 
-add_executable(MiniEngine ${SOURCES} "src/World/Scene.h" "src/World/Entity.cpp" "src/World/Entity.h" "src/World/Scene.cpp" "src/Rendering/Model.cpp" "src/Rendering/Model.h" "src/Rendering/ModelLoader.cpp" "src/Rendering/ModelLoader.h" "src/Rendering/Light.h" "src/Rendering/DynamicMesh.cpp" "src/Rendering/DynamicMesh.h" "src/World/TerrainGenerator.cpp" "src/World/TerrainGenerator.h" "src/World/Terrain.cpp" "src/Rendering/CubemapTexture.h" "src/Rendering/CubemapTexture.cpp" "src/World/Skybox.h" "src/World/Skybox.cpp" "src/World/TerrainChunk.h" "src/World/ChunkManager.h" "src/Core/AssetManager.h" "src/Rendering/PointLight.h" "src/Rendering/RenderContext.h" "src/World/Dungeon/RoomData.h" "src/World/Dungeon/DungeonGenerator.h" "src/World/Dungeon/DungeonGenerator.cpp" "src/Core/SceneManager.h" "src/Core/SceneManager.cpp" "src/World/Dungeon/DungeonRoom.h" "src/World/Dungeon/DungeonRoom.cpp" "src/World/Dungeon/DungeonMeshBuilder.h" "src/World/Dungeon/DungeonMeshBuilder.cpp" "src/World/IScene.h" "src/World/Dungeon/DungeonScene.h" "src/World/Dungeon/DungeonScene.cpp" "src/World/Dungeon/DungeonGrid.h" "src/World/Dungeon/DungeonGrid.cpp" "src/World/Dungeon/AStar.h" "src/World/Dungeon/AStar.cpp" "src/Effects/FogSettings.h" "src/Effects/FogSettings.cpp" "src/Core/Component.h" "src/Core/Components/TransformComponent.h" "src/Core/Components/PhysicsComponent.h" "src/Core/Components/PhysicsComponent.cpp" "src/Core/Components/HealthComponent.h" "src/Core/Components/HealthComponent.cpp" "src/World/Actor.h" "src/World/PlayerActor.h" "src/World/PlayerActor.cpp")
+add_executable(MiniEngine ${SOURCES} "src/World/Scene.h" "src/World/Entity.cpp" "src/World/Entity.h" "src/World/Scene.cpp" "src/Rendering/Model.cpp" "src/Rendering/Model.h" "src/Rendering/ModelLoader.cpp" "src/Rendering/ModelLoader.h" "src/Rendering/Light.h" "src/Rendering/DynamicMesh.cpp" "src/Rendering/DynamicMesh.h" "src/World/TerrainGenerator.cpp" "src/World/TerrainGenerator.h" "src/World/Terrain.cpp" "src/Rendering/CubemapTexture.h" "src/Rendering/CubemapTexture.cpp" "src/World/Skybox.h" "src/World/Skybox.cpp" "src/World/TerrainChunk.h" "src/World/ChunkManager.h" "src/Core/AssetManager.h" "src/Rendering/PointLight.h" "src/Rendering/RenderContext.h" "src/World/Dungeon/RoomData.h" "src/World/Dungeon/DungeonGenerator.h" "src/World/Dungeon/DungeonGenerator.cpp" "src/Core/SceneManager.h" "src/Core/SceneManager.cpp" "src/World/Dungeon/DungeonRoom.h" "src/World/Dungeon/DungeonRoom.cpp" "src/World/Dungeon/DungeonMeshBuilder.h" "src/World/Dungeon/DungeonMeshBuilder.cpp" "src/World/IScene.h" "src/World/Dungeon/DungeonScene.h" "src/World/Dungeon/DungeonScene.cpp" "src/World/Dungeon/DungeonGrid.h" "src/World/Dungeon/DungeonGrid.cpp" "src/World/Dungeon/AStar.h" "src/World/Dungeon/AStar.cpp" "src/Effects/FogSettings.h" "src/Effects/FogSettings.cpp" "src/Core/Component.h" "src/Core/Components/TransformComponent.h" "src/Core/Components/PhysicsComponent.h" "src/Core/Components/PhysicsComponent.cpp" "src/Core/Components/HealthComponent.h" "src/Core/Components/HealthComponent.cpp" "src/World/Actor.h" "src/World/PlayerActor.h" "src/World/PlayerActor.cpp" "src/Rendering/ShadowMap.h" "src/Rendering/ShadowMap.cpp")
+
+
+add_custom_target(CopyAssets ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/Assets
+    ${CMAKE_CURRENT_BINARY_DIR}/Assets
+    COMMENT "Copying assets to build directory"
+)
+add_dependencies(MiniEngine CopyAssets)
 
 target_link_libraries(MiniEngine glfw opengl32 assimp)

@@ -21,6 +21,7 @@ public:
     void SetMaterial(std::unique_ptr<Material> material);
     void Update(float deltaTime);
     void Render(const RenderContext& ctx);
+    void DrawGeometry() const; // depth pass — no material, no shader bind
     void SetTransform(const glm::mat4& transform);
     void SetPosition(const glm::vec3& pos) { m_Position = pos; }
     void EnableRotation(bool rotate) { m_ShouldRotate = rotate; }
@@ -31,6 +32,8 @@ public:
     unsigned int GetShaderID() const {
         return m_Material ? m_Material->GetShader()->GetID() : 0;
     }
+
+    glm::mat4 GetModelMatrix() const { return m_ModelMatrix; }
 
     // component system
     template<typename T, typename... Args>

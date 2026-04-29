@@ -5,6 +5,7 @@
 #include "TerrainChunk.h"
 #include "Rendering/Light.h"
 #include "Rendering/Material.h"
+#include "Rendering/Shader.h"
 #include "Camera/Camera.h"
 #include "FastNoiseLite.h"
 #include "Rendering/RenderContext.h"
@@ -15,6 +16,7 @@ public:
 
     void Update(const Camera& camera);
     void Render(const RenderContext& ctx) const;
+    void RenderDepth(class Shader& depthShader, const glm::mat4& lightSpaceMatrix) const;
 
     void SetViewDistance(int chunks) { m_ViewDistance = chunks; }
 

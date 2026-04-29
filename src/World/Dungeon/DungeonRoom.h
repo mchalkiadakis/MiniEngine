@@ -26,6 +26,7 @@ public:
     const RoomData& GetData()  const { return m_Data; }
     RoomState       GetState() const { return m_State; }
     void            SetState(RoomState state) { m_State = state; }
+    void DrawGeometry() const { m_Mesh.Draw(); }
 
 private:
     RoomData                  m_Data;

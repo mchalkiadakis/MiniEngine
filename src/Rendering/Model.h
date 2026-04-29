@@ -14,7 +14,6 @@
 
 class Model {
 public:
-    // Each sub-mesh gets paired with a material
     struct SubMesh {
         std::unique_ptr<Mesh>     mesh;
         std::unique_ptr<Material> material;
@@ -22,6 +21,8 @@ public:
 
     void AddSubMesh(std::unique_ptr<Mesh> mesh, std::unique_ptr<Material> material);
     void Draw(const RenderContext& ctx, const glm::mat4& modelMatrix) const;
+    //draw your geometry, but don't touch the shader
+    void DrawGeometry() const; // depth pass — no material bind
 
 private:
     std::vector<SubMesh> m_SubMeshes;

@@ -229,6 +229,7 @@ void DungeonMeshBuilder::BuildRoom(DynamicMesh& mesh,
     AddWallWithGridDoors(vertices, indices, room, WallSide::East, doorHeight, grid);
     AddWallWithGridDoors(vertices, indices, room, WallSide::West, doorHeight, grid);
 
+    Mesh::ComputeTangents(vertices, indices);
     mesh.Upload(vertices, indices);
 }
 
@@ -326,6 +327,8 @@ void DungeonMeshBuilder::BuildCorridorMesh(DynamicMesh& mesh,
         }
     }
 
-    if (!vertices.empty())
+    if (!vertices.empty()) {
+        Mesh::ComputeTangents(vertices, indices);
         mesh.Upload(vertices, indices);
+    }
 }
