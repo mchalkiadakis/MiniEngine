@@ -1,5 +1,4 @@
 #pragma once
-#include "DungeonRoom.h"
 #include "RoomData.h"
 #include "World/Scene.h"
 #include "Rendering/RenderContext.h"
@@ -8,7 +7,6 @@
 #include "Camera/Camera.h"
 #include <vector>
 #include <memory>
-#include <string>
 #include <glm.hpp>
 
 class DungeonScene : public Scene {
@@ -24,9 +22,12 @@ public:
     void RequestTransition(std::unique_ptr<IScene> nextScene);
     std::unique_ptr<IScene> GetNextScene() override;
 
+    // returns room data for torch placement etc
+    const std::vector<RoomData>& GetRooms() const { return m_Data.Rooms; }
+
 private:
-    std::vector<DungeonRoom>  m_Rooms;
-    DynamicMesh               m_CorridorMesh;
+    DynamicMesh               m_WallMesh;
+    DynamicMesh               m_FloorMesh;
     std::shared_ptr<Material> m_WallMaterial;
     std::shared_ptr<Material> m_FloorMaterial;
     std::unique_ptr<IScene>   m_NextScene;

@@ -332,3 +332,206 @@ void DungeonMeshBuilder::BuildCorridorMesh(DynamicMesh& mesh,
         mesh.Upload(vertices, indices);
     }
 }
+void DungeonMeshBuilder::BuildDungeonMesh(DynamicMesh& mesh,
+    const DungeonGrid& grid,
+    float roomHeight)
+{
+    std::vector<Vertex>       vertices;
+    std::vector<unsigned int> indices;
+
+    float cs = grid.GetCellSize();
+    float h = roomHeight;
+
+    const int dx[] = { 0,  0,  1, -1 };
+    const int dz[] = { 1, -1,  0,  0 };
+
+    for (int z = 0; z < grid.GetDepth(); z++) {
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            CellType type = grid.GetCell(x, z).Type;
+
+            // only open cells get geometry
+            if (type == CellType::Wall) continue;
+
+            float wx = x * cs;
+            float wz = z * cs;
+
+            // floor
+            AddQuad(vertices, indices,
+                { wx,      0.0f, wz },
+                { wx + cs, 0.0f, wz },
+                { wx + cs, 0.0f, wz + cs },
+                { wx,      0.0f, wz + cs },
+                { 0.0f, 1.0f, 0.0f },
+                1.0f, 1.0f);
+
+            // ceiling
+            AddQuad(vertices, indices,
+                { wx,      h, wz + cs },
+                { wx + cs, h, wz + cs },
+                { wx + cs, h, wz },
+                { wx,      h, wz },
+                { 0.0f, -1.0f, 0.0f },
+                1.0f, 1.0f);
+
+            // wall faces — only where neighbor is Wall or out of bounds
+            for (int d = 0; d < 4; d++) {
+                int nx = x + dx[d];
+                int nz = z + dz[d];
+
+                bool isWall = !grid.InBounds(nx, nz) ||
+                    grid.GetCell(nx, nz).Type == CellType::Wall;
+                if (!isWall) continue;
+
+                glm::vec3 p0, p1, p2, p3, normal;
+
+                if (d == 0) { // north
+                    normal = { 0.0f, 0.0f, -1.0f };
+                    p0 = { wx + cs, 0.0f, wz + cs };
+                    p1 = { wx,      0.0f, wz + cs };
+                    p2 = { wx,      h,    wz + cs };
+                    p3 = { wx + cs, h,    wz + cs };
+                }
+                else if (d == 1) { // south
+                    normal = { 0.0f, 0.0f, 1.0f };
+                    p0 = { wx,      0.0f, wz };
+                    p1 = { wx + cs, 0.0f, wz };
+                    p2 = { wx + cs, h,    wz };
+                    p3 = { wx,      h,    wz };
+                }
+                else if (d == 2) { // east
+                    normal = { -1.0f, 0.0f, 0.0f };
+                    p0 = { wx + cs, 0.0f, wz };
+                    p1 = { wx + cs, 0.0f, wz + cs };
+                    p2 = { wx + cs, h,    wz + cs };
+                    p3 = { wx + cs, h,    wz };
+                }
+                else { // west
+                    normal = { 1.0f, 0.0f, 0.0f };
+                    p0 = { wx, 0.0f, wz + cs };
+                    p1 = { wx, 0.0f, wz };
+                    p2 = { wx, h,    wz };
+                    p3 = { wx, h,    wz + cs };
+                }
+
+                AddQuad(vertices, indices, p0, p1, p2, p3, normal, 1.0f, h / cs);
+            }
+        }
+    }
+
+    if (!vertices.empty()) {
+        Mesh::ComputeTangents(vertices, indices);
+        mesh.Upload(vertices, indices);
+    }
+}
+void DungeonMeshBuilder::BuildDungeonFloorMesh(DynamicMesh& mesh,
+    const DungeonGrid& grid,
+    float roomHeight)
+{
+    std::vector<Vertex>       vertices;
+    std::vector<unsigned int> indices;
+
+    float cs = grid.GetCellSize();
+    float h = roomHeight;
+
+    for (int z = 0; z < grid.GetDepth(); z++) {
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            if (grid.GetCell(x, z).Type == CellType::Wall) continue;
+
+            float wx = x * cs;
+            float wz = z * cs;
+
+            // floor
+            AddQuad(vertices, indices,
+                { wx,      0.0f, wz },
+                { wx + cs, 0.0f, wz },
+                { wx + cs, 0.0f, wz + cs },
+                { wx,      0.0f, wz + cs },
+                { 0.0f, 1.0f, 0.0f },
+                1.0f, 1.0f);
+
+            // ceiling
+            AddQuad(vertices, indices,
+                { wx,      h, wz + cs },
+                { wx + cs, h, wz + cs },
+                { wx + cs, h, wz },
+                { wx,      h, wz },
+                { 0.0f, -1.0f, 0.0f },
+                1.0f, 1.0f);
+        }
+    }
+
+    if (!vertices.empty()) {
+        Mesh::ComputeTangents(vertices, indices);
+        mesh.Upload(vertices, indices);
+    }
+}
+
+void DungeonMeshBuilder::BuildDungeonWallMesh(DynamicMesh& mesh,
+    const DungeonGrid& grid,
+    float roomHeight)
+{
+    std::vector<Vertex>       vertices;
+    std::vector<unsigned int> indices;
+
+    float cs = grid.GetCellSize();
+    float h = roomHeight;
+
+    const int dx[] = { 0,  0,  1, -1 };
+    const int dz[] = { 1, -1,  0,  0 };
+
+    for (int z = 0; z < grid.GetDepth(); z++) {
+        for (int x = 0; x < grid.GetWidth(); x++) {
+            if (grid.GetCell(x, z).Type == CellType::Wall) continue;
+
+            float wx = x * cs;
+            float wz = z * cs;
+
+            for (int d = 0; d < 4; d++) {
+                int nx = x + dx[d];
+                int nz = z + dz[d];
+
+                bool isWall = !grid.InBounds(nx, nz) ||
+                    grid.GetCell(nx, nz).Type == CellType::Wall;
+                if (!isWall) continue;
+
+                glm::vec3 p0, p1, p2, p3, normal;
+
+                if (d == 0) {
+                    normal = { 0.0f, 0.0f, -1.0f };
+                    p0 = { wx + cs, 0.0f, wz + cs };
+                    p1 = { wx,      0.0f, wz + cs };
+                    p2 = { wx,      h,    wz + cs };
+                    p3 = { wx + cs, h,    wz + cs };
+                }
+                else if (d == 1) {
+                    normal = { 0.0f, 0.0f, 1.0f };
+                    p0 = { wx,      0.0f, wz };
+                    p1 = { wx + cs, 0.0f, wz };
+                    p2 = { wx + cs, h,    wz };
+                    p3 = { wx,      h,    wz };
+                }
+                else if (d == 2) {
+                    normal = { -1.0f, 0.0f, 0.0f };
+                    p0 = { wx + cs, 0.0f, wz };
+                    p1 = { wx + cs, 0.0f, wz + cs };
+                    p2 = { wx + cs, h,    wz + cs };
+                    p3 = { wx + cs, h,    wz };
+                }
+                else {
+                    normal = { 1.0f, 0.0f, 0.0f };
+                    p0 = { wx, 0.0f, wz + cs };
+                    p1 = { wx, 0.0f, wz };
+                    p2 = { wx, h,    wz };
+                    p3 = { wx, h,    wz + cs };
+                }
+
+                AddQuad(vertices, indices, p0, p1, p2, p3, normal, 1.0f, h / cs);
+            }
+        }
+    }
+
+    if (!vertices.empty()) {
+        Mesh::ComputeTangents(vertices, indices);
+        mesh.Upload(vertices, indices);
+    }
+}

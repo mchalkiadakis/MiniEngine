@@ -74,17 +74,15 @@ bool MiniEngineApp::Init() {
 
     auto wallMat = std::make_shared<Material>(
         basicShader,
-        assets.LoadTexture("Assets/Textures/Rock.jpg"),
+        assets.LoadTexture("Assets/Textures/gold.jpg"),
         rockNormal
     );
     auto floorMat = std::make_shared<Material>(
         basicShader,
-        assets.LoadTexture("Assets/Textures/Cobblestone.jpg"),
+        assets.LoadTexture("Assets/Textures/DungeonFloor.jpg"),
         rockNormal
     );
-
-
-
+  
     m_SceneManager.LoadScene(
         std::make_unique<DungeonScene>(dungeon, wallMat, floorMat)
     );
@@ -114,7 +112,7 @@ bool MiniEngineApp::Init() {
 
     std::cout << "Registered " << scene->GetPointLights().size() << " torches\n";
 
-    // Create sphere geometry for shadow testing (moving back and forth)
+    // sphere geometry for shadow testing
     const int sphereStacks = 16;
     const int sphereSlices = 32;
     const float sphereRadius = 2.0f;
@@ -122,7 +120,6 @@ bool MiniEngineApp::Init() {
     std::vector<Vertex> sphereVertices;
     std::vector<unsigned int> sphereIndices;
 
-    // Generate sphere vertices
     for (int i = 0; i <= sphereStacks; ++i) {
         float stackAngle = glm::pi<float>() / 2.0f - i * glm::pi<float>() / sphereStacks;
         float xy = sphereRadius * cosf(stackAngle);
@@ -135,14 +132,13 @@ bool MiniEngineApp::Init() {
 
             glm::vec3 pos(x, z, y);
             glm::vec3 normal = glm::normalize(pos);
-            glm::vec2 texCoord(static_cast<float>(j) / sphereSlices, 
-                               static_cast<float>(i) / sphereStacks);
+            glm::vec2 texCoord(static_cast<float>(j) / sphereSlices,
+                static_cast<float>(i) / sphereStacks);
 
             sphereVertices.push_back({ pos, normal, texCoord });
         }
     }
 
-    // Generate sphere indices
     for (int i = 0; i < sphereStacks; ++i) {
         unsigned int k1 = i * (sphereSlices + 1);
         unsigned int k2 = k1 + sphereSlices + 1;
@@ -153,19 +149,16 @@ bool MiniEngineApp::Init() {
                 sphereIndices.push_back(k2);
                 sphereIndices.push_back(k1 + 1);
             }
-
             if (i != sphereStacks - 1) {
                 sphereIndices.push_back(k1 + 1);
                 sphereIndices.push_back(k2);
                 sphereIndices.push_back(k2 + 1);
             }
-
             k1++;
             k2++;
         }
     }
 
-    // Create moving sphere entity
     m_TestSphere = &scene->CreateEntity("TestSphere");
     m_TestSphere->SetMesh(std::make_unique<Mesh>(sphereVertices, sphereIndices));
     m_TestSphere->SetMaterial(std::make_unique<Material>(
@@ -212,7 +205,6 @@ bool MiniEngineApp::Init() {
         20, 21, 22,  22, 23, 20,
     };
 
-    // test entity with physics
     auto& testBox = scene->CreateEntity("TestBox");
     testBox.SetMesh(std::make_unique<Mesh>(cubeVertices, cubeIndices));
     testBox.SetMaterial(std::make_unique<Material>(
@@ -226,17 +218,23 @@ bool MiniEngineApp::Init() {
     );
     testBox.AddComponent<PhysicsComponent>(true);
 
-    // create player
+    // create player — add ColliderComponent BEFORE moving into scene
     auto playerActor = std::make_unique<PlayerActor>("Player", 100.0f);
     playerActor->GetTransform()->SetPosition(
         glm::vec3(startCenter.x, 0.0f, startCenter.y));
     m_Player = playerActor.get();
+
+    AABB playerBounds;
+    playerBounds.Min = glm::vec3(-2.5f, 0.0f, -2.5f);
+    playerBounds.Max = glm::vec3(2.5f, 3.6f, 2.5f);
+    playerActor->AddComponent<ColliderComponent>(dungeon.Grid, playerBounds);
+
     scene->AddActor(std::move(playerActor));
 
     std::cout << "Player created at: "
         << startCenter.x << ", 0, " << startCenter.y << "\n";
 
-    // Shadow map setup
+    // shadow map setup
     m_ShadowMap.Init();
     auto depthShaderPtr = assets.LoadShader(
         "Assets/Shaders/depth.vert",
@@ -301,15 +299,10 @@ void MiniEngineApp::PollInput(float deltaTime) {
 void MiniEngineApp::Update(float deltaTime) {
     m_SceneManager.Update(deltaTime, *m_Camera);
 
-    // Update moving sphere position (for shadow testing)
     if (m_TestSphere) {
-        m_SpherePhase += deltaTime * 0.5f; // 0.5 unit/sec movement speed
-
-        // Use fixed world position (set during initialization)
-        // Oscillate back and forth in X direction (amplitude 8 units - stays in bounds)
+        m_SpherePhase += deltaTime * 0.5f;
         float offsetX = sinf(m_SpherePhase) * 8.0f;
-        m_TestSphere->SetPosition(m_SphereCenterPos + glm::vec3(offsetX+20.0f, 20.0f, 20.0f));
-
+        m_TestSphere->SetPosition(m_SphereCenterPos + glm::vec3(offsetX + 20.0f, 20.0f, 20.0f));
     }
 
     if (m_Player && !m_FreeRoam) {
@@ -332,10 +325,8 @@ void MiniEngineApp::Render() {
     auto* scene = m_SceneManager.GetCurrentScene();
     if (!scene || !m_DepthShader) return;
 
-    // Calculate light space matrix dynamically each frame
-    // Scene center at origin, radius based on dungeon size
-    const glm::vec3 sceneCenter(500.0f, 0.0f, 500.0f); // Dungeon center
-    const float sceneRadius = 750.0f;                   // Half-diagonal of 1000x1000 dungeon
+    const glm::vec3 sceneCenter(500.0f, 0.0f, 500.0f);
+    const float sceneRadius = 750.0f;
     m_LightSpaceMatrix = m_ShadowMap.GetLightSpaceMatrix(
         m_Light.Direction,
         sceneCenter,

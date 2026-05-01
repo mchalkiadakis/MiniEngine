@@ -14,7 +14,6 @@
 #include "World/IScene.h"
 #include "World/Dungeon/DungeonScene.h"
 #include "World/Dungeon/DungeonMeshBuilder.h"
-#include "World/Dungeon/DungeonRoom.h"
 #include "World/Dungeon/RoomData.h"
 #include "World/Dungeon/DungeonGenerator.h"
 #include "Camera/Camera.h"
@@ -42,3 +41,4 @@
 #include "Effects/FogSettings.h"
 #include "World/Dungeon/DungeonGrid.h"
 #include "World/Dungeon/AStar.h"
+#include "Core/Components/ColliderComponent.h"

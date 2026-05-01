@@ -13,6 +13,15 @@ public:
     static void BuildCorridorMesh(DynamicMesh& mesh,
         const DungeonGrid& grid,
         float roomHeight);
+    static void BuildDungeonMesh(DynamicMesh& mesh,
+        const DungeonGrid& grid,
+        float roomHeight);
+    static void BuildDungeonFloorMesh(DynamicMesh& mesh,
+        const DungeonGrid& grid,
+        float roomHeight);
+    static void BuildDungeonWallMesh(DynamicMesh& mesh,
+        const DungeonGrid& grid,
+        float roomHeight);
 
 private:
     static void AddQuad(std::vector<Vertex>& vertices,
