@@ -54,7 +54,6 @@ bool MiniEngineApp::Init() {
     dungeonCfg.Seed = 424209;
     DungeonData dungeon = DungeonGenerator::Generate(dungeonCfg);
 
-    // place camera in start room
     const RoomData& startRoom = dungeon.Rooms[dungeon.StartRoomIndex];
     glm::vec2 startCenter = startRoom.Center();
     m_Camera->SetPosition(glm::vec3(startCenter.x, 2.0f, startCenter.y));
@@ -82,14 +81,13 @@ bool MiniEngineApp::Init() {
         assets.LoadTexture("Assets/Textures/DungeonFloor.jpg"),
         rockNormal
     );
-  
+
     m_SceneManager.LoadScene(
         std::make_unique<DungeonScene>(dungeon, wallMat, floorMat)
     );
 
     auto* scene = m_SceneManager.GetCurrentScene();
 
-    // place torches
     float margin = 8.0f;
     for (const auto& room : dungeon.Rooms) {
         auto addTorch = [&](float x, float z) {
@@ -112,7 +110,7 @@ bool MiniEngineApp::Init() {
 
     std::cout << "Registered " << scene->GetPointLights().size() << " torches\n";
 
-    // sphere geometry for shadow testing
+    // sphere
     const int sphereStacks = 16;
     const int sphereSlices = 32;
     const float sphereRadius = 2.0f;
@@ -134,7 +132,6 @@ bool MiniEngineApp::Init() {
             glm::vec3 normal = glm::normalize(pos);
             glm::vec2 texCoord(static_cast<float>(j) / sphereSlices,
                 static_cast<float>(i) / sphereStacks);
-
             sphereVertices.push_back({ pos, normal, texCoord });
         }
     }
@@ -142,7 +139,6 @@ bool MiniEngineApp::Init() {
     for (int i = 0; i < sphereStacks; ++i) {
         unsigned int k1 = i * (sphereSlices + 1);
         unsigned int k2 = k1 + sphereSlices + 1;
-
         for (int j = 0; j < sphereSlices; ++j) {
             if (i != 0) {
                 sphereIndices.push_back(k1);
@@ -168,7 +164,7 @@ bool MiniEngineApp::Init() {
     m_SphereCenterPos = glm::vec3(startCenter.x + 20.0f, 3.0f, startCenter.y);
     m_TestSphere->SetPosition(m_SphereCenterPos);
 
-    // cube geometry
+    // cube
     std::vector<Vertex> cubeVertices = {
         { { -0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 0.0f } },
         { {  0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 0.0f } },
@@ -218,7 +214,6 @@ bool MiniEngineApp::Init() {
     );
     testBox.AddComponent<PhysicsComponent>(true);
 
-    // create player — add ColliderComponent BEFORE moving into scene
     auto playerActor = std::make_unique<PlayerActor>("Player", 100.0f);
     playerActor->GetTransform()->SetPosition(
         glm::vec3(startCenter.x, 0.0f, startCenter.y));
@@ -228,25 +223,37 @@ bool MiniEngineApp::Init() {
     playerBounds.Min = glm::vec3(-2.5f, 0.0f, -2.5f);
     playerBounds.Max = glm::vec3(2.5f, 3.6f, 2.5f);
     playerActor->AddComponent<ColliderComponent>(dungeon.Grid, playerBounds);
-
     scene->AddActor(std::move(playerActor));
 
     std::cout << "Player created at: "
         << startCenter.x << ", 0, " << startCenter.y << "\n";
 
-    // shadow map setup
+    // shadow map
     m_ShadowMap.Init();
     auto depthShaderPtr = assets.LoadShader(
         "Assets/Shaders/depth.vert",
         "Assets/Shaders/depth.frag"
     );
-
     if (!depthShaderPtr) {
-        std::cerr << "Failed to load depth shader for shadow mapping!\n";
+        std::cerr << "Failed to load depth shader!\n";
         return false;
     }
-
     m_DepthShader = depthShaderPtr.get();
+
+    // offscreen buffer — change first two values to control resolution
+    // 320x240 = PS1 look, 1280x720 = full res
+    // PS1 look
+    m_OffscreenBuffer.Init(320, 240, 1280, 720);
+
+    // Full resolution — no pixelation
+    //m_OffscreenBuffer.Init(1280, 720, 1280, 720);
+
+    m_ScreenShader = assets.LoadShader(
+        "Assets/Shaders/retro.vert",
+        "Assets/Shaders/retro.frag"
+    ).get();
+
+    m_QuadMesh = std::make_unique<Mesh>(Mesh::CreateFullscreenQuad());
 
     return true;
 }
@@ -302,7 +309,8 @@ void MiniEngineApp::Update(float deltaTime) {
     if (m_TestSphere) {
         m_SpherePhase += deltaTime * 0.5f;
         float offsetX = sinf(m_SpherePhase) * 8.0f;
-        m_TestSphere->SetPosition(m_SphereCenterPos + glm::vec3(offsetX + 20.0f, 20.0f, 20.0f));
+        m_TestSphere->SetPosition(m_SphereCenterPos +
+            glm::vec3(offsetX + 20.0f, 20.0f, 20.0f));
     }
 
     if (m_Player && !m_FreeRoam) {
@@ -323,7 +331,7 @@ void MiniEngineApp::Update(float deltaTime) {
 
 void MiniEngineApp::Render() {
     auto* scene = m_SceneManager.GetCurrentScene();
-    if (!scene || !m_DepthShader) return;
+    if (!scene || !m_DepthShader || !m_ScreenShader) return;
 
     const glm::vec3 sceneCenter(500.0f, 0.0f, 500.0f);
     const float sceneRadius = 750.0f;
@@ -335,17 +343,11 @@ void MiniEngineApp::Render() {
 
     // --- Pass 1: Shadow depth pass ---
     m_ShadowMap.BindForWriting();
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
     scene->RenderDepth(*m_DepthShader, m_LightSpaceMatrix);
-    glDisable(GL_CULL_FACE);
+    m_ShadowMap.FinishWriting();
 
-    // --- Pass 2: Main scene ---
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    m_ShadowMap.RestoreViewport(1280, 720);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    // --- Pass 2: Render scene to offscreen buffer ---
+    m_OffscreenBuffer.BindForWriting();
     m_ShadowMap.BindForReading(4);
 
     RenderContext ctx{
@@ -356,6 +358,9 @@ void MiniEngineApp::Render() {
         m_LightSpaceMatrix
     };
     m_SceneManager.Render(ctx);
+
+    // --- Pass 3: Present to screen ---
+    m_OffscreenBuffer.Present(*m_ScreenShader, *m_QuadMesh);
 }
 
 MiniEngineApp* MiniEngineApp::s_Instance = nullptr;

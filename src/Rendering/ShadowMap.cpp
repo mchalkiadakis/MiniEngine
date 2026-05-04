@@ -37,6 +37,8 @@ void ShadowMap::BindForWriting() const {
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
 }
 
 void ShadowMap::BindForReading(unsigned int textureUnit) const {
@@ -71,4 +73,7 @@ glm::mat4 ShadowMap::GetLightSpaceMatrix(const glm::vec3& lightDirection,
     );
 
     return lightProjection * lightView;
+}
+void ShadowMap::FinishWriting() const {
+    glDisable(GL_CULL_FACE);
 }

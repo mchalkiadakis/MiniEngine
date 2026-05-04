@@ -15,6 +15,7 @@ public:
     void BindForWriting() const;
     void BindForReading(unsigned int textureUnit) const;
     void RestoreViewport(int width, int height) const;
+    void FinishWriting() const;
 
     GLuint GetTexture() const { return m_DepthTexture; }
 

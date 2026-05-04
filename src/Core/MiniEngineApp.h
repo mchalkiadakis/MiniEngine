@@ -4,6 +4,7 @@
 #include "Effects/FogSettings.h"
 #include "World/PlayerActor.h"
 #include "Rendering/ShadowMap.h"
+#include "Rendering/OffscreenBuffer.h"
 
 class MiniEngineApp {
 public:
@@ -16,6 +17,10 @@ private:
     void Update(float deltaTime);
     void Render();
 
+    OffscreenBuffer       m_OffscreenBuffer;
+    Shader* m_ScreenShader = nullptr;
+    std::unique_ptr<Mesh> m_QuadMesh;
+
     GLFWwindow* m_Window = nullptr;
     std::shared_ptr<Camera> m_Camera;
     SceneManager            m_SceneManager;
@@ -23,15 +28,13 @@ private:
     FogSettings             m_Fog;
     PlayerActor* m_Player = nullptr;
 
-    // Shadow mapping
     ShadowMap               m_ShadowMap;
     Shader* m_DepthShader = nullptr;
     glm::mat4               m_LightSpaceMatrix{ 1.0f };
 
-    // Moving sphere for shadow testing
     Entity* m_TestSphere = nullptr;
     glm::vec3               m_SphereCenterPos = glm::vec3(0.0f);
-    float m_SpherePhase = 0.0f;
+    float                   m_SpherePhase = 0.0f;
 
     static MiniEngineApp* s_Instance;
     float                   m_LastMouseX = 400.0f;
