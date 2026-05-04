@@ -16,6 +16,7 @@ struct RenderContext {
     const FogSettings& fog;
     glm::mat4                      lightSpaceMatrix{ 1.0f };
     int                            shadowMapUnit = 4;
+    float                          snapStrength = 160.0f;
 
     void ApplyToShader(Shader& shader, const glm::mat4& modelMatrix) const {
         glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
@@ -31,6 +32,7 @@ struct RenderContext {
         shader.SetUniform3f("u_FogColor", fog.Color);
         shader.SetUniform1f("u_FogDensity", fog.Density);
         shader.SetUniform1i("u_FogEnabled", fog.Enabled ? 1 : 0);
+        shader.SetUniform1f("u_SnapStrength", snapStrength);
 
         // shadow map
         shader.SetUniformMat4("u_LightSpaceMatrix", glm::value_ptr(lightSpaceMatrix));

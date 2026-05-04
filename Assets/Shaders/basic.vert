@@ -10,17 +10,31 @@ uniform mat4 u_View;
 uniform mat4 u_Projection;
 uniform mat3 u_NormalMatrix;
 uniform mat4 u_LightSpaceMatrix;
+uniform float u_SnapStrength; // lower = more snapping, 0 = disabled
 
 out vec2 v_TexCoord;
 out vec3 v_FragPos;
 out vec4 v_FragPosLightSpace;
 out mat3 v_TBN;
+out vec4 snapped;
 
 void main() {
     gl_Position         = u_Projection * u_View * u_Model * vec4(aPos, 1.0);
     v_TexCoord          = aTexCoord;
     v_FragPos           = vec3(u_Model * vec4(aPos, 1.0));
     v_FragPosLightSpace = u_LightSpaceMatrix * vec4(v_FragPos, 1.0);
+    snapped = gl_Position;
+
+    // PS1 vertex snapping
+
+if (u_SnapStrength > 0.0) {
+    
+    snapped.xyz /= snapped.w;
+    snapped.xy = floor(snapped.xy * u_SnapStrength) / u_SnapStrength;
+    snapped.xyz *= snapped.w;
+    gl_Position = snapped;
+}
+
 
     // build TBN matrix in world space
     vec3 T = normalize(u_NormalMatrix * aTangent);

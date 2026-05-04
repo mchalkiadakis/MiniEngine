@@ -5,6 +5,9 @@
 #include "World/PlayerActor.h"
 #include "Rendering/ShadowMap.h"
 #include "Rendering/OffscreenBuffer.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 class MiniEngineApp {
 public:
@@ -16,6 +19,7 @@ private:
     void PollInput(float deltaTime);
     void Update(float deltaTime);
     void Render();
+    void RenderDebugUI();
 
     OffscreenBuffer       m_OffscreenBuffer;
     Shader* m_ScreenShader = nullptr;
@@ -35,6 +39,10 @@ private:
     Entity* m_TestSphere = nullptr;
     glm::vec3               m_SphereCenterPos = glm::vec3(0.0f);
     float                   m_SpherePhase = 0.0f;
+
+    bool                    m_ShowDebugUI = false;
+    bool                    m_TabKeyPressed = false;
+    float m_SnapStrength = 0.0f;
 
     static MiniEngineApp* s_Instance;
     float                   m_LastMouseX = 400.0f;

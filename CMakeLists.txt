@@ -19,6 +19,7 @@ include_directories(
     external/glm
     external/stb
     external/assimp/include
+    external/imgui
     src
     src/Core
     src/Rendering
@@ -27,6 +28,15 @@ include_directories(
     src/Engine
     src/Camera
     src/Effects
+)
+
+set(IMGUI_SOURCES
+    external/imgui/imgui.cpp
+    external/imgui/imgui_draw.cpp
+    external/imgui/imgui_tables.cpp
+    external/imgui/imgui_widgets.cpp
+    external/imgui/imgui_impl_glfw.cpp
+    external/imgui/imgui_impl_opengl3.cpp
 )
 
 file(GLOB_RECURSE SOURCES
@@ -41,7 +51,7 @@ file(GLOB_RECURSE SOURCES
     external/glad/src/glad.c
 )
 
-add_executable(MiniEngine ${SOURCES})
+add_executable(MiniEngine ${SOURCES} ${IMGUI_SOURCES})
 
 add_custom_target(CopyAssets ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory

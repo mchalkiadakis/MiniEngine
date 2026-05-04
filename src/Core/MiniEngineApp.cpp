@@ -34,6 +34,13 @@ bool MiniEngineApp::Init() {
     glfwSetCursorPosCallback(m_Window, MouseCallback);
     glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    // ImGui setup
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
     auto& assets = AssetManager::Get();
     auto basicShader = assets.LoadShader("Assets/Shaders/basic.vert",
         "Assets/Shaders/basic.frag");
@@ -240,13 +247,8 @@ bool MiniEngineApp::Init() {
     }
     m_DepthShader = depthShaderPtr.get();
 
-    // offscreen buffer — change first two values to control resolution
-    // 320x240 = PS1 look, 1280x720 = full res
-    // PS1 look
+    // offscreen buffer
     m_OffscreenBuffer.Init(320, 240, 1280, 720);
-
-    // Full resolution — no pixelation
-    //m_OffscreenBuffer.Init(1280, 720, 1280, 720);
 
     m_ScreenShader = assets.LoadShader(
         "Assets/Shaders/retro.vert",
@@ -273,6 +275,11 @@ void MiniEngineApp::Run() {
         glfwPollEvents();
     }
 
+    // ImGui cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     glfwDestroyWindow(m_Window);
     glfwTerminate();
 }
@@ -290,6 +297,20 @@ void MiniEngineApp::PollInput(float deltaTime) {
     }
     if (glfwGetKey(m_Window, GLFW_KEY_F) == GLFW_RELEASE)
         m_FKeyPressed = false;
+
+    // Tab toggles debug UI
+    if (glfwGetKey(m_Window, GLFW_KEY_TAB) == GLFW_PRESS && !m_TabKeyPressed) {
+        m_TabKeyPressed = true;
+        m_ShowDebugUI = !m_ShowDebugUI;
+        if (m_ShowDebugUI)
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        else
+            glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+    if (glfwGetKey(m_Window, GLFW_KEY_TAB) == GLFW_RELEASE)
+        m_TabKeyPressed = false;
+
+    if (m_ShowDebugUI) return; // don't process game input when UI is open
 
     if (m_FreeRoam || !m_Player) {
         bool down = glfwGetKey(m_Window, GLFW_KEY_Q) == GLFW_PRESS;
@@ -329,6 +350,55 @@ void MiniEngineApp::Update(float deltaTime) {
     }
 }
 
+void MiniEngineApp::RenderDebugUI() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
+    if (m_ShowDebugUI) {
+        ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_Always);
+        ImGui::Begin("MiniEngine Debug", nullptr,
+            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
+
+        // FPS
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        ImGui::Separator();
+
+        // camera position
+        glm::vec3 camPos = m_Camera->GetPosition();
+        ImGui::Text("Camera: %.1f, %.1f, %.1f",
+            camPos.x, camPos.y, camPos.z);
+        ImGui::Separator();
+
+        // fog controls
+        ImGui::Text("Fog");
+        ImGui::Checkbox("Enabled##fog", &m_Fog.Enabled);
+        ImGui::SliderFloat("Density", &m_Fog.Density, 0.0f, 0.05f);
+        ImGui::SliderFloat("Vertex Snap", &m_SnapStrength, 0.0f, 300.0f);
+        ImGui::ColorEdit3("Fog Color", &m_Fog.Color.x);
+        ImGui::Separator();
+
+        // light controls
+        ImGui::Text("Directional Light");
+        ImGui::ColorEdit3("Light Color", &m_Light.Color.x);
+        ImGui::SliderFloat3("Direction",
+            &m_Light.Direction.x, -1.0f, 1.0f);
+        ImGui::Separator();
+
+        // scene info
+        auto* scene = m_SceneManager.GetCurrentScene();
+        if (scene)
+            ImGui::Text("Point lights: %d",
+                (int)scene->GetPointLights().size());
+
+        ImGui::End();
+    }
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
 void MiniEngineApp::Render() {
     auto* scene = m_SceneManager.GetCurrentScene();
     if (!scene || !m_DepthShader || !m_ScreenShader) return;
@@ -351,21 +421,28 @@ void MiniEngineApp::Render() {
     m_ShadowMap.BindForReading(4);
 
     RenderContext ctx{
-        *m_Camera,
-        m_Light,
-        scene->GetPointLights(),
-        m_Fog,
-        m_LightSpaceMatrix
+    *m_Camera,
+    m_Light,
+    scene->GetPointLights(),
+    m_Fog,
+    m_LightSpaceMatrix,
+    4,
+    m_SnapStrength
     };
     m_SceneManager.Render(ctx);
 
-    // --- Pass 3: Present to screen ---
+    // --- Pass 3: Present to screen
     m_OffscreenBuffer.Present(*m_ScreenShader, *m_QuadMesh);
+
+    // --- Pass 4: ImGui overlay (always full res) 
+    RenderDebugUI();
 }
 
 MiniEngineApp* MiniEngineApp::s_Instance = nullptr;
 
 void MiniEngineApp::MouseCallback(GLFWwindow*, double xpos, double ypos) {
+    if (s_Instance->m_ShowDebugUI) return; // don't rotate camera when UI open
+
     if (s_Instance->m_FirstMouse) {
         s_Instance->m_LastMouseX = static_cast<float>(xpos);
         s_Instance->m_LastMouseY = static_cast<float>(ypos);
