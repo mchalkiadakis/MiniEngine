@@ -12,6 +12,8 @@
 #include <gtc/type_ptr.hpp>
 #include <iostream>
 #include "Core/InputManager.h"
+#include "World/EnemyActor.h"
+#include "Rendering/ModelLoader.h"
 
 static DungeonConfig DefaultConfig() {
     DungeonConfig cfg;
@@ -51,13 +53,11 @@ void DungeonScene::Build(const DungeonConfig& config) {
 
     m_WallMaterial = std::make_shared<Material>(
         basicShader,
-        assets.LoadTexture("Assets/Textures/gold.jpg"),
-        rockNormal
+        assets.LoadTexture("Assets/Textures/TEX_Skull_Wall.png")
     );
     m_FloorMaterial = std::make_shared<Material>(
         basicShader,
-        assets.LoadTexture("Assets/Textures/DungeonFloor.jpg"),
-        rockNormal
+        assets.LoadTexture("Assets/Textures/TEX_Ground_04.png")
     );
 
     m_Data = DungeonGenerator::Generate(config);
@@ -99,7 +99,7 @@ void DungeonScene::Build(const DungeonConfig& config) {
     playerActor->GetTransform()->SetPosition(
         glm::vec3(startCenter.x, 0.0f, startCenter.y));
 
-    m_Player = playerActor.get(); // save before move
+    m_Player = playerActor.get();
 
     AABB playerBounds;
     playerBounds.Min = glm::vec3(-2.5f, 0.0f, -2.5f);
@@ -110,9 +110,44 @@ void DungeonScene::Build(const DungeonConfig& config) {
 
     std::cout << "Player spawned at: "
         << startCenter.x << ", 0, " << startCenter.y << "\n";
+
+    // spawn enemy at boss room with skeleton mesh
+    // spawn enemy at start room near player
+    const RoomData& enemyRoom = m_Data.Rooms[m_Data.StartRoomIndex];
+    glm::vec2 enemyCenter = enemyRoom.Center();
+
+    auto enemy = std::make_unique<EnemyActor>(
+        "Enemy",
+        m_Data.Grid,
+        m_Data.Rooms
+    );
+    enemy->GetTransform()->SetPosition(
+        glm::vec3(enemyCenter.x + 20.0f, 10.0f, enemyCenter.y));
+    enemy->GetTransform()->SetScale(glm::vec3(10.0f));
+    enemy->GetTransform()->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
+    auto skeletonModel = ModelLoader::Load(
+        "Assets/Models/PS1_Skull/PS1_Skeleton.fbx",
+        basicShader
+    );
+    if (skeletonModel)
+        enemy->SetModel(std::move(skeletonModel));
+
+    m_Enemy = enemy.get();
+    AddActor(std::move(enemy));
+
+    std::cout << "Enemy spawned at boss room\n";
+    
+   
 }
 
 void DungeonScene::Update(float deltaTime, Camera& camera) {
+    if (m_FirstUpdate) {
+        m_FirstUpdate = false;
+        const RoomData& start = m_Data.Rooms[m_Data.StartRoomIndex];
+        glm::vec2 c = start.Center();
+        camera.SetPosition(glm::vec3(c.x, 1.8f, c.y));
+    }
+
     // free roam toggle
     if (InputManager::IsKeyDown(GLFW_KEY_F) && !m_FKeyPressed) {
         m_FKeyPressed = true;
@@ -132,6 +167,7 @@ void DungeonScene::Update(float deltaTime, Camera& camera) {
         camera.ProcessKeyboard(deltaTime, forward, backward, left, right, down, up);
     }
     else if (m_Player) {
+        // player input always runs regardless of enemy
         bool forward = InputManager::IsKeyDown(GLFW_KEY_W);
         bool backward = InputManager::IsKeyDown(GLFW_KEY_S);
         bool left = InputManager::IsKeyDown(GLFW_KEY_A);
@@ -148,6 +184,10 @@ void DungeonScene::Update(float deltaTime, Camera& camera) {
             camera.SetPosition(pos + glm::vec3(0.0f, 1.8f, 0.0f));
         }
     }
+
+    // enemy always updates independently
+    if (m_Enemy)
+        m_Enemy->Update(deltaTime, m_Player);
 
     Scene::Update(deltaTime, camera);
 }

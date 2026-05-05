@@ -10,6 +10,7 @@
 #include <memory>
 #include <glm.hpp>
 #include "World/PlayerActor.h"
+#include "World/EnemyActor.h"
 
 class DungeonScene : public Scene {
 public:
@@ -37,6 +38,8 @@ private:
     std::shared_ptr<Material> m_FloorMaterial;
     std::unique_ptr<IScene>   m_NextScene;
     DungeonData               m_Data;
+    EnemyActor* m_Enemy = nullptr;
     bool m_FreeRoam = false;
     bool m_FKeyPressed = false;
+    bool m_FirstUpdate = true;
 };
