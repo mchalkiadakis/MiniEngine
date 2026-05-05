@@ -13,7 +13,7 @@ class Shader;
 class IScene {
 public:
     virtual ~IScene() = default;
-    virtual void Update(float deltaTime, const Camera& camera) = 0;
+    virtual void Update(float deltaTime, Camera& camera) = 0;
     virtual void Render(const RenderContext& ctx) const = 0;
     virtual void RenderDepth(Shader& depthShader,
         const glm::mat4& lightSpaceMatrix) const = 0;

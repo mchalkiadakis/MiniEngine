@@ -18,7 +18,7 @@ void Scene::SetSkybox(std::unique_ptr<Skybox> skybox) {
     m_Skybox = std::move(skybox);
 }
 
-void Scene::Update(float deltaTime, const Camera& camera) {
+void Scene::Update(float deltaTime, Camera& camera) {
     for (auto& entity : m_Entities)
         entity->Update(deltaTime);
 

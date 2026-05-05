@@ -19,7 +19,7 @@ public:
     void    AddActor(std::unique_ptr<Actor> actor) override;
     void    SetChunkManager(std::unique_ptr<ChunkManager> chunkManager);
     void    SetSkybox(std::unique_ptr<Skybox> skybox);
-    void    Update(float deltaTime, const Camera& camera) override;
+    void    Update(float deltaTime, Camera& camera) override;
     void    Render(const RenderContext& ctx) const override;
     void    RenderDepth(Shader& depthShader,
         const glm::mat4& lightSpaceMatrix) const override;

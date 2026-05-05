@@ -7,7 +7,7 @@
 class SceneManager {
 public:
     void LoadScene(std::unique_ptr<IScene> scene);
-    void Update(float deltaTime, const Camera& camera);
+    void Update(float deltaTime, Camera& camera);
     void Render(const RenderContext& ctx) const;
 
     IScene* GetCurrentScene() const { return m_CurrentScene.get(); }

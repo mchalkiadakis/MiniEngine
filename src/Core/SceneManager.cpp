@@ -10,7 +10,7 @@ void SceneManager::LoadScene(std::unique_ptr<IScene> scene) {
     std::cout << "Scene loaded\n";
 }
 
-void SceneManager::Update(float deltaTime, const Camera& camera) {
+void SceneManager::Update(float deltaTime, Camera& camera) {
     if (m_CurrentScene)
         m_CurrentScene->Update(deltaTime, camera);
 }
