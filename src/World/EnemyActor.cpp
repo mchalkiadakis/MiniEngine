@@ -15,12 +15,13 @@ EnemyActor::EnemyActor(const std::string& name,
     , m_DetectionRadius(detectionRadius)
     , m_Rng(std::random_device{}())
 {
-    // disable gravity — enemy slides on floor
+    
     GetPhysics()->SetUseGravity(false);
     SetNewPatrolTarget();
 }
 
 void EnemyActor::Update(float deltaTime, const PlayerActor* player) {
+    m_Animator.Update(deltaTime);
     if (!player) {
         UpdatePatrol(deltaTime);
         return;
@@ -75,11 +76,10 @@ void EnemyActor::MoveAlongPath(float deltaTime) {
     if (!transform) return;
 
     glm::vec3 currentPos = transform->GetPosition();
-    float     cs = m_Grid->GetCellSize();
+    float cs = m_Grid->GetCellSize();
 
-    // target is center of current path cell
     glm::ivec2 targetCell = m_Path[m_PathIndex];
-    glm::vec3  targetPos = glm::vec3(
+    glm::vec3 targetPos = glm::vec3(
         targetCell.x * cs + cs * 0.5f,
         currentPos.y,
         targetCell.y * cs + cs * 0.5f
@@ -89,7 +89,6 @@ void EnemyActor::MoveAlongPath(float deltaTime) {
     float     dist = glm::length(dir);
 
     if (dist < 1.0f) {
-        // reached this cell — move to next
         m_PathIndex++;
         if (m_PathIndex >= (int)m_Path.size()) {
             m_Path.clear();
@@ -98,7 +97,13 @@ void EnemyActor::MoveAlongPath(float deltaTime) {
         return;
     }
 
-    glm::vec3 move = glm::normalize(dir) * m_MoveSpeed * deltaTime;
+    // face movement direction
+    glm::vec3 normDir = glm::normalize(dir);
+    float yaw = glm::degrees(atan2f(normDir.x, normDir.z));
+    glm::vec3 rot = transform->GetRotation();
+    transform->SetRotation(glm::vec3(rot.x, yaw, rot.z));
+
+    glm::vec3 move = normDir * m_MoveSpeed * deltaTime;
     transform->SetPosition(currentPos + move);
 }
 
@@ -125,4 +130,33 @@ void EnemyActor::RebuildPathTo(const glm::vec3& worldTarget) {
 
     m_Path = AStar::FindPath(*m_Grid, startX, startZ, endX, endZ);
     m_PathIndex = 0;
+}
+
+
+void EnemyActor::SetSkinnedModel(std::unique_ptr<SkinnedModel> model) {
+    m_SkinnedModel = std::move(model);
+
+    if (m_SkinnedModel && m_SkinnedModel->GetSkeleton()) {
+        m_Animator.SetSkeleton(m_SkinnedModel->GetSkeleton());
+        m_Animator.SetGlobalInverseTransform(
+            m_SkinnedModel->GetGlobalInverseTransform());
+
+        // resize to accommodate original bone IDs
+        m_Animator.ResizeBoneMatrices(256);
+
+        for (const auto& clip : m_SkinnedModel->GetClips())
+            m_Animator.AddClip(clip);
+
+        if (!m_SkinnedModel->GetClips().empty())
+            m_Animator.Play(m_SkinnedModel->GetClips()[0].Name);
+
+        std::cout << "Skeleton bone count: "
+            << m_SkinnedModel->GetSkeleton()->GetBoneCount() << "\n";
+    }
+}
+
+void EnemyActor::Render(const RenderContext& ctx,
+    const glm::mat4& modelMatrix) const {
+    if (!m_SkinnedModel) return;
+    m_SkinnedModel->Draw(ctx, modelMatrix, m_Animator.GetBoneMatrices());
 }

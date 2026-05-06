@@ -51,6 +51,16 @@ public:
         return glm::normalize(glm::vec3(m_Matrix[1]));
     }
 
+    glm::mat4 GetModelMatrix() const {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, m_Position);
+        model = glm::rotate(model, glm::radians(m_Rotation.y), glm::vec3(0, 1, 0));
+        model = glm::rotate(model, glm::radians(m_Rotation.x), glm::vec3(1, 0, 0));
+        model = glm::rotate(model, glm::radians(m_Rotation.z), glm::vec3(0, 0, 1));
+        model = glm::scale(model, m_Scale);
+        return model;
+    }
+
 private:
     void Recalculate() {
         glm::mat4 t = glm::translate(glm::mat4(1.0f), m_Position);

@@ -121,16 +121,33 @@ void DungeonScene::Build(const DungeonConfig& config) {
         m_Data.Grid,
         m_Data.Rooms
     );
+    
+    
+
     enemy->GetTransform()->SetPosition(
-        glm::vec3(enemyCenter.x + 20.0f, 10.0f, enemyCenter.y));
+        glm::vec3(enemyCenter.x + 20.0f, 10.8f, enemyCenter.y));
     enemy->GetTransform()->SetScale(glm::vec3(10.0f));
-    enemy->GetTransform()->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
-    auto skeletonModel = ModelLoader::Load(
-        "Assets/Models/PS1_Skull/PS1_Skeleton.fbx",
-        basicShader
+   // enemy->GetTransform()->SetRotation(glm::vec3(-90.0f, 0.0f, 0.0f));
+    auto skinnedShader = assets.LoadShader(
+        "Assets/Shaders/skinned.vert",
+        "Assets/Shaders/skinned.frag"
     );
-    if (skeletonModel)
-        enemy->SetModel(std::move(skeletonModel));
+
+    // load skeleton with walk animation
+    auto skinnedModel = ModelLoader::LoadSkinned(
+        "Assets/Models/PS1_Skull/Animations/SkeletonWalking.fbx",
+        skinnedShader
+    );
+    auto skeletonTex = assets.LoadTexture(
+        "Assets/Models/PS1_Skull/ps1_skeleton_256x256_transp.png"
+    );
+    
+    
+    if (skinnedModel)
+        enemy->SetSkinnedModel(std::move(skinnedModel));
+
+    if (skinnedModel && skeletonTex)
+        skinnedModel->SetTexture(skeletonTex);
 
     m_Enemy = enemy.get();
     AddActor(std::move(enemy));
@@ -195,18 +212,25 @@ void DungeonScene::Update(float deltaTime, Camera& camera) {
 void DungeonScene::Render(const RenderContext& ctx) const {
     Scene::Render(ctx);
 
+    // dungeon geometry
     if (m_WallMaterial) {
         auto shader = m_WallMaterial->GetShader();
         m_WallMaterial->Bind();
         ctx.ApplyToShader(*shader, glm::mat4(1.0f));
         m_WallMesh.Draw();
     }
-
     if (m_FloorMaterial) {
         auto shader = m_FloorMaterial->GetShader();
         m_FloorMaterial->Bind();
         ctx.ApplyToShader(*shader, glm::mat4(1.0f));
         m_FloorMesh.Draw();
+    }
+
+    // skinned enemy
+    if (m_Enemy) {
+        auto* transform = m_Enemy->GetTransform();
+        if (transform)
+            m_Enemy->Render(ctx, transform->GetModelMatrix());
     }
 }
 

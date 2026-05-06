@@ -135,3 +135,95 @@ Mesh& Mesh::operator=(Mesh&& other) noexcept {
     }
     return *this;
 }
+
+SkinnedMesh::SkinnedMesh(const std::vector<SkinnedVertex>& vertices,
+    const std::vector<unsigned int>& indices)
+    : m_IndexCount(indices.size())
+{
+    glGenVertexArrays(1, &m_VAO);
+    glGenBuffers(1, &m_VBO);
+    glGenBuffers(1, &m_EBO);
+
+    glBindVertexArray(m_VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferData(GL_ARRAY_BUFFER,
+        vertices.size() * sizeof(SkinnedVertex),
+        vertices.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+        indices.size() * sizeof(unsigned int),
+        indices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+        sizeof(SkinnedVertex), (void*)offsetof(SkinnedVertex, Position));
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+        sizeof(SkinnedVertex), (void*)offsetof(SkinnedVertex, Normal));
+    glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+        sizeof(SkinnedVertex), (void*)offsetof(SkinnedVertex, TexCoords));
+    glEnableVertexAttribArray(2);
+
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
+        sizeof(SkinnedVertex), (void*)offsetof(SkinnedVertex, Tangent));
+    glEnableVertexAttribArray(3);
+
+    glVertexAttribIPointer(4, 4, GL_INT,
+        sizeof(SkinnedVertex), (void*)offsetof(SkinnedVertex, BoneIds));
+    glEnableVertexAttribArray(4);
+
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE,
+        sizeof(SkinnedVertex), (void*)offsetof(SkinnedVertex, BoneWeights));
+    glEnableVertexAttribArray(5);
+
+    glBindVertexArray(0);
+}
+
+SkinnedMesh::~SkinnedMesh() {
+    glDeleteBuffers(1, &m_EBO);
+    glDeleteBuffers(1, &m_VBO);
+    glDeleteVertexArrays(1, &m_VAO);
+}
+
+SkinnedMesh::SkinnedMesh(SkinnedMesh&& other) noexcept
+    : m_VAO(other.m_VAO)
+    , m_VBO(other.m_VBO)
+    , m_EBO(other.m_EBO)
+    , m_IndexCount(other.m_IndexCount)
+{
+    other.m_VAO = 0;
+    other.m_VBO = 0;
+    other.m_EBO = 0;
+    other.m_IndexCount = 0;
+}
+
+SkinnedMesh& SkinnedMesh::operator=(SkinnedMesh&& other) noexcept {
+    if (this != &other) {
+        glDeleteBuffers(1, &m_EBO);
+        glDeleteBuffers(1, &m_VBO);
+        glDeleteVertexArrays(1, &m_VAO);
+
+        m_VAO = other.m_VAO;
+        m_VBO = other.m_VBO;
+        m_EBO = other.m_EBO;
+        m_IndexCount = other.m_IndexCount;
+
+        other.m_VAO = 0;
+        other.m_VBO = 0;
+        other.m_EBO = 0;
+        other.m_IndexCount = 0;
+    }
+    return *this;
+}
+
+void SkinnedMesh::Draw() const {
+    glBindVertexArray(m_VAO);
+    glDrawElements(GL_TRIANGLES,
+        static_cast<GLsizei>(m_IndexCount),
+        GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+}

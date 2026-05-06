@@ -51,7 +51,7 @@ file(GLOB_RECURSE SOURCES
     external/glad/src/glad.c
 )
 
-add_executable(MiniEngine ${SOURCES} ${IMGUI_SOURCES} "src/World/Scene2D.h" "src/World/Scene2D.cpp" "src/World/MenuScene.h" "src/World/MenuScene.cpp" "src/World/MainMenu.h" "src/World/MainMenu.cpp" "src/Core/InputManager.h" "src/Core/InputManager.cpp" "src/World/EnemyActor.h" "src/World/EnemyActor.cpp")
+add_executable(MiniEngine ${SOURCES} ${IMGUI_SOURCES} "src/World/Scene2D.h" "src/World/Scene2D.cpp" "src/World/MenuScene.h" "src/World/MenuScene.cpp" "src/World/MainMenu.h" "src/World/MainMenu.cpp" "src/Core/InputManager.h" "src/Core/InputManager.cpp" "src/World/EnemyActor.h" "src/World/EnemyActor.cpp" "src/Rendering/Skeleton.h" "src/Rendering/Skeleton.cpp" "src/Rendering/AnimationClip.h" "src/Rendering/AnimationClip.cpp" "src/Rendering/Animator.h" "src/Rendering/Animator.cpp")
 
 add_custom_target(CopyAssets ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory

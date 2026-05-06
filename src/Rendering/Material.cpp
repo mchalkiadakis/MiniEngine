@@ -8,14 +8,16 @@ Material::Material(std::shared_ptr<Shader> shader,
     , m_NormalMap(normalMap)
 {
 }
-
 void Material::Bind() const {
     m_Shader->Use();
-    m_Texture->Bind(0);          // albedo on unit 0
-    m_Shader->SetUniform1i("u_Texture", 0);
+
+    if (m_Texture) {
+        m_Texture->Bind(0);
+        m_Shader->SetUniform1i("u_Texture", 0);
+    }
 
     if (m_NormalMap) {
-        m_NormalMap->Bind(1);    // normal map on unit 1
+        m_NormalMap->Bind(1);
         m_Shader->SetUniform1i("u_NormalMap", 1);
         m_Shader->SetUniform1i("u_UseNormalMap", 1);
     }
