@@ -17,6 +17,7 @@ public:
     virtual void Render(const RenderContext& ctx) const = 0;
     virtual void RenderDepth(Shader& depthShader,
         const glm::mat4& lightSpaceMatrix) const = 0;
+    virtual void RenderTransparent(const RenderContext& ctx) const {}
 
     // lighting
     virtual void AddPointLight(const PointLight& light) = 0;

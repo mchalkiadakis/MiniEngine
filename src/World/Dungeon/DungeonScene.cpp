@@ -91,6 +91,36 @@ void DungeonScene::Build(const DungeonConfig& config) {
 
     std::cout << "Registered " << GetPointLights().size() << " torches\n";
 
+    // load particle shader
+    m_ParticleShader = assets.LoadShader(
+        "Assets/Shaders/particle.vert",
+        "Assets/Shaders/particle.frag"
+    ).get();
+
+    // create emitter for each torch
+    
+    for (const auto& room : m_Data.Rooms) {
+        auto addTorchEmitter = [&](float x, float z) {
+            ParticleEmitter emitter;
+            emitter.Init(48);
+            emitter.SetPosition(glm::vec3(x, 5.5f, z));
+            emitter.SetEmissionRate(40.0f);
+            emitter.SetLifetime(0.4f, 1.0f);
+            emitter.SetStartColor({ 1.0f, 0.35f, 0.0f, 1.0f });
+            emitter.SetEndColor({ 1.0f, 0.6f, 0.0f, 0.0f });
+            emitter.SetVelocityMin({ -2.0f, 6.0f,  -2.0f });
+            emitter.SetVelocityMax({ 2.0f, 20.0f,  2.0f });
+            emitter.SetStartSize(8.0f);
+            emitter.SetEndSize(2.0f);
+            m_TorchEmitters.push_back(std::move(emitter));
+            };
+        addTorchEmitter(room.X + margin, room.Z + margin);
+        addTorchEmitter(room.X + room.Width - margin, room.Z + margin);
+        addTorchEmitter(room.X + margin, room.Z + room.Depth - margin);
+        addTorchEmitter(room.X + room.Width - margin, room.Z + room.Depth - margin);
+    }
+
+
     // spawn player at start room
     const RoomData& startRoom = m_Data.Rooms[m_Data.StartRoomIndex];
     glm::vec2 startCenter = startRoom.Center();
@@ -142,6 +172,10 @@ void DungeonScene::Build(const DungeonConfig& config) {
         "Assets/Models/PS1_Skull/ps1_skeleton_256x256_transp.png"
     );
     
+    m_SkinnedDepthShader = assets.LoadShader(
+        "Assets/Shaders/skinned_depth.vert",
+        "Assets/Shaders/depth.frag"
+    ).get();
     
     if (skinnedModel)
         enemy->SetSkinnedModel(std::move(skinnedModel));
@@ -164,6 +198,9 @@ void DungeonScene::Update(float deltaTime, Camera& camera) {
         glm::vec2 c = start.Center();
         camera.SetPosition(glm::vec3(c.x, 1.8f, c.y));
     }
+
+    for (auto& emitter : m_TorchEmitters)
+        emitter.Update(deltaTime);
 
     // free roam toggle
     if (InputManager::IsKeyDown(GLFW_KEY_F) && !m_FKeyPressed) {
@@ -212,7 +249,6 @@ void DungeonScene::Update(float deltaTime, Camera& camera) {
 void DungeonScene::Render(const RenderContext& ctx) const {
     Scene::Render(ctx);
 
-    // dungeon geometry
     if (m_WallMaterial) {
         auto shader = m_WallMaterial->GetShader();
         m_WallMaterial->Bind();
@@ -225,19 +261,28 @@ void DungeonScene::Render(const RenderContext& ctx) const {
         ctx.ApplyToShader(*shader, glm::mat4(1.0f));
         m_FloorMesh.Draw();
     }
-
-    // skinned enemy
     if (m_Enemy) {
         auto* transform = m_Enemy->GetTransform();
         if (transform)
             m_Enemy->Render(ctx, transform->GetModelMatrix());
     }
+
+    // particles inside offscreen buffer
+    if (m_ParticleShader) {
+        for (const auto& emitter : m_TorchEmitters)
+            emitter.Render(ctx.camera, *m_ParticleShader);
+    }
+
+    // hard reset all blend state
+    glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
+
+void DungeonScene::RenderTransparent(const RenderContext& ctx) const {}
 
 void DungeonScene::RenderDepth(Shader& depthShader,
     const glm::mat4& lightSpaceMatrix) const {
-    Scene::RenderDepth(depthShader, lightSpaceMatrix);
-
     depthShader.Use();
     depthShader.SetUniformMat4("u_LightSpaceMatrix",
         glm::value_ptr(lightSpaceMatrix));
@@ -247,6 +292,15 @@ void DungeonScene::RenderDepth(Shader& depthShader,
 
     m_WallMesh.Draw();
     m_FloorMesh.Draw();
+
+    // skinned enemy depth pass with correct bone matrices
+    /*if (m_Enemy && m_SkinnedDepthShader) {
+        auto* transform = m_Enemy->GetTransform();
+        if (transform)
+            m_Enemy->RenderDepth(lightSpaceMatrix,
+                transform->GetModelMatrix(),
+                *m_SkinnedDepthShader);
+    }*/
 }
 
 void DungeonScene::RequestTransition(std::unique_ptr<IScene> nextScene) {

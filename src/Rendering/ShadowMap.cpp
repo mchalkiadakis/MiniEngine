@@ -34,6 +34,11 @@ void ShadowMap::Init() {
 }
 
 void ShadowMap::BindForWriting() const {
+    // hard reset state before shadow pass
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -41,13 +46,13 @@ void ShadowMap::BindForWriting() const {
     glCullFace(GL_FRONT);
 }
 
+void ShadowMap::RestoreViewport(int width, int height) const {
+    glViewport(0, 0, width, height);
+}
+
 void ShadowMap::BindForReading(unsigned int textureUnit) const {
     glActiveTexture(GL_TEXTURE0 + textureUnit);
     glBindTexture(GL_TEXTURE_2D, m_DepthTexture);
-}
-
-void ShadowMap::RestoreViewport(int width, int height) const {
-    glViewport(0, 0, width, height);
 }
 
 glm::mat4 ShadowMap::GetLightSpaceMatrix(const glm::vec3& lightDirection,

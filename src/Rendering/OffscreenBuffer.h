@@ -15,6 +15,7 @@ public:
 
     void BindForWriting() const;
     void Present(Shader& shader, Mesh& quadMesh) const;
+    void BlitDepthToScreen() const;
 
     GLuint GetColorTexture() const { return m_ColorTexture; }
     int    GetRenderWidth()  const { return m_RenderWidth; }

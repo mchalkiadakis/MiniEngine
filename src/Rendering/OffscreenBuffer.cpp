@@ -19,9 +19,9 @@ void OffscreenBuffer::Init(int renderWidth, int renderHeight,
 
     glGenTextures(1, &m_ColorTexture);
     glBindTexture(GL_TEXTURE_2D, m_ColorTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
         m_RenderWidth, m_RenderHeight, 0,
-        GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+        GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -29,7 +29,7 @@ void OffscreenBuffer::Init(int renderWidth, int renderHeight,
 
     glGenRenderbuffers(1, &m_DepthRBO);
     glBindRenderbuffer(GL_RENDERBUFFER, m_DepthRBO);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24,
         m_RenderWidth, m_RenderHeight);
 
     glGenFramebuffers(1, &m_FBO);
@@ -59,6 +59,7 @@ void OffscreenBuffer::Present(Shader& shader, Mesh& quadMesh) const {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND); // add this — reset any leftover blend state
 
     shader.Use();
     glActiveTexture(GL_TEXTURE0);
@@ -68,4 +69,14 @@ void OffscreenBuffer::Present(Shader& shader, Mesh& quadMesh) const {
     quadMesh.Draw();
 
     glEnable(GL_DEPTH_TEST);
+}
+void OffscreenBuffer::BlitDepthToScreen() const {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FBO);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBlitFramebuffer(
+        0, 0, m_RenderWidth, m_RenderHeight,
+        0, 0, m_WindowWidth, m_WindowHeight,
+        GL_DEPTH_BUFFER_BIT, GL_NEAREST
+    );
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

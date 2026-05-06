@@ -24,6 +24,7 @@ public:
     unsigned int GetID() const { return m_ID; }
     void SetUniformMat3(const std::string& name, const float* matrix);
     void SetPointLights(const std::vector<PointLight>& lights);
+    void SetUniform4f(const std::string& name, const glm::vec4& value);
 
 private:
     unsigned int m_ID;

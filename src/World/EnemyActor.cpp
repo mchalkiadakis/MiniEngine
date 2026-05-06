@@ -15,7 +15,7 @@ EnemyActor::EnemyActor(const std::string& name,
     , m_DetectionRadius(detectionRadius)
     , m_Rng(std::random_device{}())
 {
-    
+    SetSkinnedActor(true);
     GetPhysics()->SetUseGravity(false);
     SetNewPatrolTarget();
 }
@@ -67,6 +67,26 @@ void EnemyActor::UpdateChase(float deltaTime, const glm::vec3& playerPos) {
         RebuildPathTo(playerPos);
     }
     MoveAlongPath(deltaTime);
+}
+void EnemyActor::RenderDepth(const glm::mat4& lightSpaceMatrix,
+    const glm::mat4& modelMatrix,
+    Shader& depthShader) const {
+    if (!m_SkinnedModel) return;
+
+    depthShader.Use();
+    depthShader.SetUniformMat4("u_LightSpaceMatrix",
+        glm::value_ptr(lightSpaceMatrix));
+    depthShader.SetUniformMat4("u_Model",
+        glm::value_ptr(modelMatrix));
+
+    const auto& matrices = m_Animator.GetBoneMatrices();
+    int boneCount = (int)std::min(matrices.size(), (size_t)256);
+    for (int i = 0; i < boneCount; i++) {
+        std::string uniform = "u_BoneMatrices[" + std::to_string(i) + "]";
+        depthShader.SetUniformMat4(uniform, glm::value_ptr(matrices[i]));
+    }
+
+    m_SkinnedModel->DrawGeometry();
 }
 
 void EnemyActor::MoveAlongPath(float deltaTime) {
@@ -132,16 +152,15 @@ void EnemyActor::RebuildPathTo(const glm::vec3& worldTarget) {
     m_PathIndex = 0;
 }
 
-
 void EnemyActor::SetSkinnedModel(std::unique_ptr<SkinnedModel> model) {
     m_SkinnedModel = std::move(model);
 
     if (m_SkinnedModel && m_SkinnedModel->GetSkeleton()) {
         m_Animator.SetSkeleton(m_SkinnedModel->GetSkeleton());
-        m_Animator.SetGlobalInverseTransform(
-            m_SkinnedModel->GetGlobalInverseTransform());
 
-        // resize to accommodate original bone IDs
+        // temporarily use identity instead of global inverse
+        m_Animator.SetGlobalInverseTransform(glm::mat4(1.0f));
+
         m_Animator.ResizeBoneMatrices(256);
 
         for (const auto& clip : m_SkinnedModel->GetClips())
@@ -149,9 +168,6 @@ void EnemyActor::SetSkinnedModel(std::unique_ptr<SkinnedModel> model) {
 
         if (!m_SkinnedModel->GetClips().empty())
             m_Animator.Play(m_SkinnedModel->GetClips()[0].Name);
-
-        std::cout << "Skeleton bone count: "
-            << m_SkinnedModel->GetSkeleton()->GetBoneCount() << "\n";
     }
 }
 

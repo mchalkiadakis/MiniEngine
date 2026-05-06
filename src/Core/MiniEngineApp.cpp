@@ -98,7 +98,6 @@ void MiniEngineApp::Run() {
 }
 
 void MiniEngineApp::PollInput(float deltaTime) {
-    // Tab toggles debug UI
     if (glfwGetKey(m_Window, GLFW_KEY_TAB) == GLFW_PRESS && !m_TabKeyPressed) {
         m_TabKeyPressed = true;
         m_ShowDebugUI = !m_ShowDebugUI;

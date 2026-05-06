@@ -25,6 +25,9 @@ public:
     void SetTransform(const glm::mat4& transform);
     void SetPosition(const glm::vec3& pos) { m_Position = pos; }
     void EnableRotation(bool rotate) { m_ShouldRotate = rotate; }
+    bool HasMesh() const { return m_Mesh != nullptr || m_Model != nullptr; }
+    void SetSkinnedActor(bool val) { m_IsSkinnedActor = val; }
+    bool IsSkinnedActor() const { return m_IsSkinnedActor; }
 
     const std::string& GetName()     const { return m_Name; }
     glm::vec3          GetPosition() const { return m_Position; }
@@ -73,6 +76,7 @@ private:
     float                     m_RotationAngle = 0.0f;
     bool                      m_ShouldRotate = false;
     glm::vec3                 m_Position = glm::vec3(0.0f);
+    bool m_IsSkinnedActor = false;
 
     std::unordered_map<std::type_index, std::unique_ptr<Component>> m_Components;
 };

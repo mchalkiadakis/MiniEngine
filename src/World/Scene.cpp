@@ -60,6 +60,9 @@ void Scene::RenderDepth(Shader& depthShader,
         glm::value_ptr(lightSpaceMatrix));
 
     for (auto& entity : m_Entities) {
+        if (!entity->HasMesh()) continue;
+        if (entity->IsSkinnedActor()) continue; // check BEFORE drawing
+
         auto* transform = const_cast<Entity*>(entity.get())
             ->GetComponent<TransformComponent>();
 
@@ -68,11 +71,13 @@ void Scene::RenderDepth(Shader& depthShader,
             : entity->GetModelMatrix();
 
         depthShader.SetUniformMat4("u_Model", glm::value_ptr(model));
-       // glm::vec3 translation(model[3]);
-       // std::cout << "  model pos: " << translation.x << " "
-         //   << translation.y << " " << translation.z << "\n";
         entity->DrawGeometry();
-        //std::cout << "Depth pass: " << entity->GetName() << "\n";
+
+        std::cout << "Entity: " << entity->GetName()
+            << " HasMesh=" << entity->HasMesh()
+            << " IsSkinned=" << entity->IsSkinnedActor() << "\n";
+        if (!entity->HasMesh()) continue;
+        if (entity->IsSkinnedActor()) continue;
     }
 }
 

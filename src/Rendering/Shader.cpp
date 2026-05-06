@@ -29,6 +29,10 @@ int Shader::GetUniformLocation(const std::string& name) {
     return location;
 }
 
+void Shader::SetUniform4f(const std::string& name, const glm::vec4& value) {
+    glUniform4f(GetUniformLocation(name), value.x, value.y, value.z, value.w);
+}
+
 void Shader::Use() const {
     glUseProgram(m_ID);
 }

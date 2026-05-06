@@ -25,8 +25,11 @@ public:
 
     void Update(float deltaTime, const PlayerActor* player);
 
-    
+    SkinnedModel* GetSkinnedModel() const { return m_SkinnedModel.get(); }
     void SetSkinnedModel(std::unique_ptr<SkinnedModel> model);
+    void RenderDepth(const glm::mat4& lightSpaceMatrix,
+        const glm::mat4& modelMatrix,
+        Shader& depthShader) const;
     void Render(const RenderContext& ctx, const glm::mat4& modelMatrix) const;
 
 private:
