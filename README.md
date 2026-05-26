@@ -1,8 +1,6 @@
 # MiniEngine
 
-A custom 3D game engine and dungeon crawler built in C++17 and OpenGL 3.3 Core Profile. Portfolio project targeting a Junior Rendering Programmer role.
-
-The game concept is a PS1-aesthetic transdimensional prison: you are something God imprisoned — too paradoxical to exist freely. The dungeon is a constraint built to contain a being that exists across time. Three timelines are three drafts of the same space. Enemies are antibodies the prison sends to collapse paradoxes. Visual reference: Bloodborne.
+A custom 3D game engine and dungeon crawler built in C++17 and OpenGL 3.3 Core Profile.
 
 ---
 
