@@ -108,7 +108,7 @@ Assets are copied to the build directory automatically via a CMake post-build st
 | PS1 Dark Fantasy Horror Game Assets — nature collection, palace props, skeleton character, skull, sword | Stark Crafts | [itch.io](https://starkcrafts.itch.io/ps1-dark-fantasy-horror-game-assets-by-stark-crafts) · [YouTube](https://www.youtube.com/c/starkcraftsyt) |
 | Survival Guitar Backpack (low poly) | Berk Gedik, modified by Joey de Vries | [Sketchfab](https://sketchfab.com/3d-models/survival-guitar-backpack-low-poly-799f8c4511f84fab8c3f12887f7e6b36) |
 
-If we have made an attribution error or missed a credit, please reach out and we will correct it promptly.
+If i have made an attribution error or missed a credit, please reach out and i will correct it promptly.
 
 ---
 
